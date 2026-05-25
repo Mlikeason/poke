@@ -167,22 +167,20 @@ export default function CardTile({ card, entry, customPrice, localImageBase, sho
           {!readonly && (
             <div className="flex items-center justify-between gap-1 pt-1">
               <Counter
-                lang="en"
-                label={t('card.lang.en')}
                 count={e.en || 0}
                 onInc={() => incOwned(card.id, 1, 'en')}
                 onDec={() => incOwned(card.id, -1, 'en')}
                 accent={PIKACHU_YELLOW}
                 accentText="#1f1d2b"
+                title="EN"
               />
               <Counter
-                lang="jp"
-                label={t('card.lang.jp')}
                 count={e.jp || 0}
                 onInc={() => incOwned(card.id, 1, 'jp')}
                 onDec={() => incOwned(card.id, -1, 'jp')}
                 accent={POKE_RED}
                 accentText="#ffffff"
+                title="JP"
               />
             </div>
           )}
@@ -211,12 +209,9 @@ export default function CardTile({ card, entry, customPrice, localImageBase, sho
   )
 }
 
-function Counter({ label, count, onInc, onDec, accent, accentText }) {
+function Counter({ count, onInc, onDec, accent, accentText, title }) {
   return (
-    <div className="flex items-center gap-0.5">
-      <span className="mr-0.5 text-[9px] font-semibold uppercase tracking-wider text-slate-400">
-        {label}
-      </span>
+    <div className="flex items-center gap-0.5" title={title}>
       <button
         onClick={onDec}
         disabled={count <= 0}
