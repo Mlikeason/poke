@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useCollection, useSets } from '../hooks.js'
 import { ERAS, groupSetsByEra } from '../lib/eras.js'
 import { statsByEra, uniqueOwnedCount, estimatedValue, ownedInSet, totalCardsInSets, wantedCount } from '../lib/stats.js'
-import { POPULAR_SETS, POPULAR_HOME_COUNT } from '../lib/popular.js'
+import { HOME_POPULAR, POPULAR_SETS } from '../lib/popular.js'
 import { formatSgd } from '../lib/currency.js'
 import EraCard from '../components/EraCard.jsx'
 import PopularSetCard from '../components/PopularSetCard.jsx'
@@ -29,11 +29,9 @@ export default function Home() {
   const wanted = wantedCount(col.cards)
   const pct = totalAll > 0 ? (ownedAll / totalAll) * 100 : 0
 
-  const popularAll = POPULAR_SETS.map((id) => sets.find((s) => s.id === id))
-    .filter(Boolean)
-    .sort((a, b) => (a.releaseDate < b.releaseDate ? 1 : -1))
-  const popularHome = popularAll.slice(0, POPULAR_HOME_COUNT)
-  const hasMorePopular = popularAll.length > POPULAR_HOME_COUNT
+  // Home 用手工列表 (固定顺序), Sets 页全部按日期排
+  const popularHome = HOME_POPULAR.map((id) => sets.find((s) => s.id === id)).filter(Boolean)
+  const hasMorePopular = POPULAR_SETS.length > HOME_POPULAR.length
 
   return (
     <div className="space-y-8">
