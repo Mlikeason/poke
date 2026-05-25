@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { incOwned, toggleWanted, setCustomPrice } from '../lib/collection.js'
 import { useT } from '../lib/i18n.js'
-import { formatSgd } from '../lib/currency.js'
+import { formatSgd, DEFAULT_USD } from '../lib/currency.js'
 import { setCode } from '../lib/setCode.js'
 
 const RARITY_TONE = {
@@ -23,8 +23,9 @@ export default function CardTile({ card, entry, customPrice, localImageBase, sho
   const [editingPrice, setEditingPrice] = useState(false)
 
   const marketPrice = card.price
-  const effectivePrice = customPrice ?? marketPrice
-  const priceSource = customPrice != null ? 'custom' : marketPrice != null ? 'market' : null
+  // 优先级: 用户手动价 > API 市场价 > 默认 1 SGD
+  const effectivePrice = customPrice ?? marketPrice ?? DEFAULT_USD
+  const priceSource = customPrice != null ? 'custom' : marketPrice != null ? 'market' : 'default'
 
   const rarityCls = RARITY_TONE[card.rarity] || 'bg-slate-100 text-slate-600'
 
@@ -123,9 +124,10 @@ export default function CardTile({ card, entry, customPrice, localImageBase, sho
           <div className="pt-1 text-[11px]">
             {readonly ? (
               <div className="flex items-center justify-between text-slate-600">
-                <span>{effectivePrice != null ? formatSgd(effectivePrice) : '—'}</span>
+                <span>{formatSgd(effectivePrice)}</span>
                 {priceSource === 'market' && <span className="text-[9px] text-slate-400">{t('card.market')}</span>}
                 {priceSource === 'custom' && <span className="text-[9px] text-emerald-500">★</span>}
+                {priceSource === 'default' && <span className="text-[9px] text-slate-300">·</span>}
               </div>
             ) : editingPrice ? (
               <input
@@ -157,11 +159,10 @@ export default function CardTile({ card, entry, customPrice, localImageBase, sho
                 }
                 className="flex w-full items-center justify-between rounded text-left text-slate-500 hover:text-slate-900"
               >
-                <span>
-                  {effectivePrice != null ? formatSgd(effectivePrice) : t('card.addPrice')}
-                </span>
+                <span>{formatSgd(effectivePrice)}</span>
                 {priceSource === 'market' && <span className="text-[9px] text-slate-400">{t('card.market')}</span>}
                 {priceSource === 'custom' && <span className="text-[9px] text-emerald-500">★</span>}
+                {priceSource === 'default' && <span className="text-[9px] text-slate-300">·</span>}
               </button>
             )}
           </div>

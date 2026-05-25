@@ -19,13 +19,14 @@ export function wantedCount(cards) {
   return Object.values(cards).filter((c) => c.wanted).length
 }
 
-// 估价: customPrices 优先, 否则用 API 抓的 prices
+// 估价 (USD): customPrices > API 抓的 prices > 默认 1 SGD (DEFAULT_USD)
+import { DEFAULT_USD } from './currency.js'
 export function estimatedValue(cards, customPrices, prices) {
   let usd = 0
   for (const [id, entry] of Object.entries(cards)) {
     if (!entry.owned) continue
-    const p = customPrices[id] ?? prices?.[id]
-    if (p) usd += p * entry.owned
+    const p = customPrices[id] ?? prices?.[id] ?? DEFAULT_USD
+    usd += p * entry.owned
   }
   return usd
 }

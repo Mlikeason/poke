@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // 从 SVG 渲染出 PWA / iOS home screen 用的 PNG icon
-// 一次性运行: node scripts/gen-icons.js
+// 一次性运行 (生成的图已 commit, 平时不用跑):
+//   npm i -D sharp && node scripts/gen-icons.js
+// sharp 没作为常驻依赖 — 它二进制重, 拖慢 Vercel 构建
 import sharp from 'sharp'
 import { writeFile, mkdir } from 'node:fs/promises'
 import { resolve, dirname } from 'node:path'
