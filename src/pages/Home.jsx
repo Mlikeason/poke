@@ -70,7 +70,7 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
             {popularHome.map((s) => (
-              <PopularSetCard key={s.id} set={s} owned={ownedInSet(col.cards, s.id)} fluid />
+              <PopularSetCard key={s.id} set={s} owned={ownedInSet(col.cards, s.id)} />
             ))}
           </div>
         </section>

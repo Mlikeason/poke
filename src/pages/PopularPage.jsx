@@ -20,7 +20,7 @@ export default function PopularPage() {
       <h1 className="text-2xl font-medium text-slate-900">{t('home.popular')}</h1>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {popular.map((s) => (
-          <PopularSetCard key={s.id} set={s} owned={ownedInSet(col.cards, s.id)} fluid />
+          <PopularSetCard key={s.id} set={s} owned={ownedInSet(col.cards, s.id)} />
         ))}
       </div>
     </div>
