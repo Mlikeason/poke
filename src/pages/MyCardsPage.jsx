@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useCollection } from '../hooks.js'
 import { getCardsForSet } from '../lib/api.js'
+import { totalOwned } from '../lib/collection.js'
 import { sortByRarity } from '../lib/sort.js'
 import CardTile from '../components/CardTile.jsx'
 import { useT } from '../lib/i18n.js'
@@ -18,7 +19,7 @@ export default function MyCardsPage() {
 
   // 用户拥有的所有 card id, 按所属 set 去重
   const ownedIds = Object.entries(col.cards)
-    .filter(([_, v]) => (v.owned || 0) > 0)
+    .filter(([_, v]) => totalOwned(v) > 0)
     .map(([id]) => id)
   const neededSetIds = useMemo(
     () => Array.from(new Set(ownedIds.map(setIdOf))),

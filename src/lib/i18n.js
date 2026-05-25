@@ -75,6 +75,9 @@ const M = {
     'mycards.title': 'All My Cards',
     'mycards.empty': 'No cards yet — open a set and tap + on a card.',
 
+    'card.lang.en': 'EN',
+    'card.lang.jp': 'JP',
+
     'card.market': 'market',
     'card.addPrice': '+ price',
     'card.priceTitleCustom': 'Custom price (click to edit)',
@@ -162,6 +165,9 @@ const M = {
 
     'mycards.title': '我的全部卡片',
     'mycards.empty': '还没有卡 — 进任一系列, 在卡片上点 + 标记拥有。',
+
+    'card.lang.en': '英',
+    'card.lang.jp': '日',
 
     'card.market': '市场',
     'card.addPrice': '+ 标价',

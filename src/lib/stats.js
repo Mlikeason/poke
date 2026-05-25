@@ -1,53 +1,56 @@
 // 统计计算 (基于 collection state + sets 元数据)
 import { ERAS, eraForSeries } from './eras.js'
+import { DEFAULT_USD } from './currency.js'
+
+// 一张卡的总持有 (EN + JP)
+function totalForEntry(e) {
+  return (e?.en || 0) + (e?.jp || 0)
+}
 
 export function totalCardsInSets(sets) {
   return sets.reduce((sum, s) => sum + (s.total || 0), 0)
 }
 
-// 不重复卡片数(每张卡 owned >= 1 算 1)
+// 不重复卡片数 (任一语言版本拥有 1 张以上即算 1)
 export function uniqueOwnedCount(cards) {
-  return Object.values(cards).filter((c) => c.owned > 0).length
+  return Object.values(cards).filter((c) => totalForEntry(c) > 0).length
 }
 
-// 总张数(包括重复)
+// 总张数 (EN+JP 全部加起来)
 export function totalOwnedCount(cards) {
-  return Object.values(cards).reduce((s, c) => s + (c.owned || 0), 0)
+  return Object.values(cards).reduce((s, c) => s + totalForEntry(c), 0)
 }
 
 export function wantedCount(cards) {
   return Object.values(cards).filter((c) => c.wanted).length
 }
 
-// 估价 (USD): customPrices > API 抓的 prices > 默认 1 SGD (DEFAULT_USD)
-import { DEFAULT_USD } from './currency.js'
+// 估价 (USD): EN+JP 同价 (用户偏好), customPrices > API > 默认 1 SGD
 export function estimatedValue(cards, customPrices, prices) {
   let usd = 0
   for (const [id, entry] of Object.entries(cards)) {
-    if (!entry.owned) continue
+    const n = totalForEntry(entry)
+    if (!n) continue
     const p = customPrices[id] ?? prices?.[id] ?? DEFAULT_USD
-    usd += p * entry.owned
+    usd += p * n
   }
   return usd
 }
 
-// 按系列 set id 算已收集 unique 数量。需要知道每个 setId 下有哪些卡,
-// 但 sets.json 只有 total,不知道具体 cardId 前缀。约定: cardId 形如 `${setId}-${num}`
-// 所以可以快速 prefix 匹配
+// 已拥有的 unique 卡数, 局限到某 setId 前缀
 export function ownedInSet(cards, setId) {
   let n = 0
   const prefix = setId + '-'
   for (const [id, entry] of Object.entries(cards)) {
-    if (entry.owned > 0 && id.startsWith(prefix)) n++
+    if (id.startsWith(prefix) && totalForEntry(entry) > 0) n++
   }
   return n
 }
 
-// 按 era 汇总: { eraId: { owned, total } }
+// { eraId: { owned, total } }
 export function statsByEra(sets, cards) {
   const out = {}
   for (const e of ERAS) out[e.id] = { owned: 0, total: 0 }
-  // 给每个 set 累计 total 和 owned
   for (const s of sets) {
     const eid = eraForSeries(s.series)
     if (!out[eid]) continue
