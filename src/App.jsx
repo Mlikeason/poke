@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import Header from './components/Header.jsx'
+import TabBar from './components/TabBar.jsx'
 import { useBootPrices } from './hooks.js'
 
 export default function App() {
@@ -7,10 +8,14 @@ export default function App() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-8 pt-6">
+      {/* 给底部 tab bar 留出空间: 56px (按钮) + safe-area-inset-bottom */}
+      <main
+        className="mx-auto w-full max-w-6xl flex-1 px-4 pt-6"
+        style={{ paddingBottom: 'calc(56px + env(safe-area-inset-bottom) + 1rem)' }}
+      >
         <Outlet />
       </main>
-      <footer className="h-[30px] shrink-0" style={{ background: '#EE1515' }} />
+      <TabBar />
     </div>
   )
 }
