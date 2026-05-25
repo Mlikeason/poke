@@ -23,7 +23,7 @@ export default function SetCard({ set, owned, gradient }) {
           <span className="shrink-0 text-xs text-slate-400">{set.releaseDate}</span>
         </div>
         <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
-          <span className="rounded-md px-1.5 py-0.5 font-mono text-[10px] font-medium text-white" style={{ background: '#EE1515' }}>{code}</span>
+          <span className="rounded-md bg-slate-900 px-1.5 py-0.5 font-mono text-[10px] font-medium text-white">{code}</span>
           {set.ptcgoCode && set.ptcgoCode.toUpperCase() !== code && (
             <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px]">{set.ptcgoCode}</span>
           )}

@@ -5,6 +5,8 @@ import SearchBox from './SearchBox.jsx'
 
 // Pokemon 品牌红, 也用于 set code badge 等点缀
 export const POKE_RED = '#EE1515'
+// Pikachu 黄 (header bg)
+export const PIKACHU_YELLOW = '#FFCC00'
 
 export default function Header() {
   const t = useT()
@@ -13,8 +15,11 @@ export default function Header() {
 
   return (
     <header
-      className="sticky top-0 z-30 border-b border-white/30 bg-white/70 backdrop-blur-md"
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      className="sticky top-0 z-30 border-b border-black/10"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        background: PIKACHU_YELLOW,
+      }}
     >
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
         <Link to="/" className="flex shrink-0 items-center gap-2 text-base font-medium text-slate-900">
@@ -32,7 +37,7 @@ export default function Header() {
           <button
             onClick={() => setShowSearch(true)}
             title="Search"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:scale-110 hover:text-slate-900"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-black/10 bg-white text-slate-700 shadow-sm transition hover:scale-110 hover:text-slate-900"
           >
             <SearchIcon />
           </button>
@@ -41,7 +46,7 @@ export default function Header() {
         <Link
           to="/settings"
           title={t('nav.settings')}
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:scale-110 hover:text-slate-900"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-black/10 bg-white text-slate-700 shadow-sm transition hover:scale-110 hover:text-slate-900"
         >
           <GearIcon />
         </Link>
@@ -49,7 +54,7 @@ export default function Header() {
 
       {loc.pathname !== '/' && (
         <div className="mx-auto max-w-6xl px-4 pb-2">
-          <Link to="/" className="text-xs text-slate-500 hover:text-slate-900">{t('nav.back')}</Link>
+          <Link to="/" className="text-xs text-slate-700 hover:text-slate-900">{t('nav.back')}</Link>
         </div>
       )}
     </header>

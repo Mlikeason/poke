@@ -5,11 +5,12 @@ import { useBootPrices } from './hooks.js'
 export default function App() {
   useBootPrices()
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="mx-auto max-w-6xl px-4 pb-20 pt-6">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-8 pt-6">
         <Outlet />
       </main>
+      <footer className="h-[30px] shrink-0" style={{ background: '#EE1515' }} />
     </div>
   )
 }

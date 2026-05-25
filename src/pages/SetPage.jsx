@@ -85,20 +85,20 @@ export default function SetPage() {
             </div>
           )}
           <div className="min-w-0 flex-1">
+            {/* 行 1: code + 发布日期 */}
             <div className="flex items-center gap-2 text-xs text-slate-500">
-              <span className="rounded-md px-1.5 py-0.5 font-mono text-[10px] font-medium text-white" style={{ background: '#EE1515' }}>{setCode(setId)}</span>
-              {set?.ptcgoCode && set.ptcgoCode.toUpperCase() !== setCode(setId) && (
-                <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px]">{set.ptcgoCode}</span>
-              )}
-              <span>{eraPrimary}</span>
-              <span className="text-slate-300">·</span>
+              <span className="rounded-md bg-slate-900 px-1.5 py-0.5 font-mono text-[10px] font-medium text-white">{setCode(setId)}</span>
               <span>{set?.releaseDate}</span>
             </div>
+            {/* 行 2: era 名 */}
+            <div className="mt-1 text-xs text-slate-500">{eraPrimary}</div>
+            {/* 行 3: set name */}
             <h1 className="mt-1 truncate text-2xl font-medium text-slate-900">{set?.name || setId}</h1>
+            {/* 行 4: 仅 X/Y · pct% */}
             <div className="mt-2 flex items-center gap-2 text-sm text-slate-600">
-              <span>{t('set.cards', { owned, total })}</span>
+              <span>{owned} / {total}</span>
               <span className="text-slate-300">·</span>
-              <span>{t('set.complete', { pct: total > 0 ? Math.round((owned / total) * 100) : 0 })}</span>
+              <span>{total > 0 ? Math.round((owned / total) * 100) : 0}%</span>
             </div>
             <div className="mt-2 max-w-md">
               <ProgressBar value={owned} max={total} gradient={gradient} />
@@ -113,8 +113,8 @@ export default function SetPage() {
         </div>
       </div>
 
-      {/* 工具条 */}
-      <div className="flex flex-wrap items-center gap-2">
+      {/* 工具条: tabs 居左, sort 居右, 同高 */}
+      <div className="flex items-center justify-between gap-2">
         <div className="flex rounded-full bg-white/70 p-1 ring-1 ring-slate-200">
           {[
             ['owned', t('tab.owned')],
@@ -133,34 +133,23 @@ export default function SetPage() {
             </button>
           ))}
         </div>
-
-        <div className="flex items-center gap-1 text-xs text-slate-500">
-          <span className="hidden sm:inline">{t('sort.label')}:</span>
-          <div className="flex rounded-full bg-white/70 p-0.5 ring-1 ring-slate-200">
-            {[
-              ['number', t('sort.number')],
-              ['rarity', t('sort.rarity')],
-            ].map(([k, label]) => (
-              <button
-                key={k}
-                onClick={() => setSort(k)}
-                className={
-                  'rounded-full px-2.5 py-0.5 text-xs transition ' +
-                  (sort === k ? 'bg-slate-700 text-white' : 'text-slate-500 hover:text-slate-900')
-                }
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+        <div className="flex rounded-full bg-white/70 p-1 ring-1 ring-slate-200">
+          {[
+            ['number', t('sort.number')],
+            ['rarity', t('sort.rarity')],
+          ].map(([k, label]) => (
+            <button
+              key={k}
+              onClick={() => setSort(k)}
+              className={
+                'rounded-full px-3 py-1 text-sm transition ' +
+                (sort === k ? 'bg-slate-900 text-white shadow' : 'text-slate-600 hover:text-slate-900')
+              }
+            >
+              {label}
+            </button>
+          ))}
         </div>
-
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={t('search.placeholder')}
-          className="min-w-[160px] flex-1 rounded-full border border-slate-200 bg-white/70 px-4 py-1.5 text-sm placeholder:text-slate-400 focus:border-slate-400 focus:outline-none"
-        />
       </div>
 
       {/* 卡片网格 */}

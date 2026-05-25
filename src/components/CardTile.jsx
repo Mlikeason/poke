@@ -60,7 +60,7 @@ export default function CardTile({ card, entry, customPrice, localImageBase, sho
             <div className="grid aspect-[245/342] place-items-center text-slate-300">·</div>
           )}
           {owned && (
-            <span className="absolute right-2 top-2 grid h-7 min-w-[1.75rem] place-items-center rounded-full bg-emerald-500 px-1.5 text-xs font-medium text-white shadow-md">
+            <span className="absolute right-2 top-2 grid h-7 min-w-[1.75rem] place-items-center rounded-full px-1.5 text-xs font-medium text-slate-900 shadow-md" style={{ background: '#FFCC00' }}>
               ×{e.owned}
             </span>
           )}
@@ -102,7 +102,8 @@ export default function CardTile({ card, entry, customPrice, localImageBase, sho
                 </span>
                 <button
                   onClick={() => incOwned(card.id, 1)}
-                  className="grid h-7 w-7 place-items-center rounded-full bg-emerald-500 text-white shadow transition active:scale-90 hover:bg-emerald-600"
+                  className="grid h-7 w-7 place-items-center rounded-full text-base font-semibold text-slate-900 shadow transition active:scale-90 hover:brightness-95"
+                  style={{ background: '#FFCC00' }}
                 >
                   +
                 </button>
