@@ -37,7 +37,7 @@ export default function Header() {
         <div className="flex-1" />
 
         {showSearch ? (
-          <div className="w-[200px]">
+          <div className="w-[160px]">
             <SearchBox autoFocus onClose={() => setShowSearch(false)} />
           </div>
         ) : (

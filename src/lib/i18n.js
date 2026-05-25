@@ -14,7 +14,7 @@ const listeners = new Set()
 
 const M = {
   en: {
-    'app.title': 'My Pokemon Cards',
+    'app.title': 'My Pokemon',
     'nav.back': '← Back',
     'nav.settings': 'Settings',
     'tab.home': 'Home',
@@ -105,7 +105,7 @@ const M = {
     'settings.packsHelp': 'To show a booster pack image alongside the set logo, drop a JPG/PNG/WEBP file into public/packs/ named after the set id, e.g. public/packs/sv8.jpg for Surging Sparks. The app picks it up automatically — no manifest needed.',
   },
   zh: {
-    'app.title': 'My Pokemon Cards',
+    'app.title': 'My Pokemon',
     'nav.back': '← 返回',
     'nav.settings': '设置',
     'tab.home': '首页',
