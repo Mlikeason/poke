@@ -1,0 +1,6 @@
+{
+  "framework": "vite",
+  "installCommand": "npm install --prefer-offline --no-audit --no-fund",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist"
+}
