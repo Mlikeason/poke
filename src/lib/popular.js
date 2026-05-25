@@ -16,6 +16,7 @@ export const POPULAR_SETS = [
   'me3',
   'me2pt5',
   'me2',
+  'm1l', // Mega Brave (JP)
   'zsv10pt5',
   'rsv10pt5',
   'sv10',

@@ -1,5 +1,6 @@
 // 按需拉某 set 的所有卡片, 带 localStorage 缓存
 import { mergePrices } from './collection.js'
+import { getCustomCards } from './customSets.js'
 
 const CACHE_PREFIX = 'poke.cards.v1.'
 
@@ -25,6 +26,10 @@ function pickPrice(c) {
 }
 
 export async function getCardsForSet(setId) {
+  // 自定义 set (日文 set 等): 直接返回占位卡片, 不走 API
+  const custom = getCustomCards(setId)
+  if (custom) return custom
+
   const key = CACHE_PREFIX + setId
   try {
     const cached = localStorage.getItem(key)

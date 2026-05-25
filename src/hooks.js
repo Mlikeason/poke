@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getState, subscribe, mergePrices } from './lib/collection.js'
+import { CUSTOM_SETS } from './lib/customSets.js'
 
 // 让组件订阅 collection 变化
 export function useCollection() {
@@ -8,16 +9,21 @@ export function useCollection() {
   return s
 }
 
-// 拉 public/sets.json
+// 拉 public/sets.json, 并合并手工自定义 set (日文 set 等)
 export function useSets() {
   const [sets, setSets] = useState(null)
   useEffect(() => {
     fetch(import.meta.env.BASE_URL + 'sets.json')
       .then((r) => r.json())
-      .then(setSets)
+      .then((api) => {
+        const merged = [...CUSTOM_SETS, ...api].sort((a, b) =>
+          a.releaseDate < b.releaseDate ? 1 : -1,
+        )
+        setSets(merged)
+      })
       .catch((e) => {
         console.error('sets.json load failed', e)
-        setSets([])
+        setSets([...CUSTOM_SETS])
       })
   }, [])
   return sets
