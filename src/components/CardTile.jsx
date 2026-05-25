@@ -101,12 +101,23 @@ export default function CardTile({ card, entry, customPrice, localImageBase, sho
 
         {/* 信息条 */}
         <div className="space-y-1 p-2">
-          <div className="flex items-baseline justify-between gap-1">
-            <h4 className="truncate text-sm font-medium text-slate-900" title={card.name}>{card.name}</h4>
+          {/* 名称 + 稀有度 (内联省一行) + 编号 */}
+          <div className="flex items-baseline justify-between gap-1.5">
+            <div className="flex min-w-0 flex-1 items-baseline gap-1.5">
+              <h4 className="shrink truncate text-sm font-medium text-slate-900" title={card.name}>{card.name}</h4>
+              {card.rarity && (
+                <span
+                  className={'shrink-0 truncate rounded px-1 text-[9px] leading-relaxed ' + rarityCls}
+                  title={card.rarity}
+                >
+                  {card.rarity}
+                </span>
+              )}
+            </div>
             <span className="shrink-0 font-mono text-[10px] text-slate-400">#{card.number}</span>
           </div>
 
-          {/* 价格 (在稀有度之前) */}
+          {/* 价格 */}
           <div className="text-[11px]">
             {readonly ? (
               <div className="flex items-center justify-between text-slate-600">
@@ -151,11 +162,6 @@ export default function CardTile({ card, entry, customPrice, localImageBase, sho
               </button>
             )}
           </div>
-
-          {/* 稀有度 */}
-          {card.rarity && (
-            <span className={'inline-block rounded px-1.5 py-0.5 text-[10px] ' + rarityCls}>{card.rarity}</span>
-          )}
 
           {/* EN/JP 双计数器 (非 readonly) */}
           {!readonly && (
