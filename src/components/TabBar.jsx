@@ -3,7 +3,6 @@ import { useT } from '../lib/i18n.js'
 
 const POKE_RED = '#EE1515'
 
-// 判断 tab 当前激活: 严格首页 / 各页面前缀
 function isActive(loc, path) {
   if (path === '/') return loc === '/'
   return loc === path || loc.startsWith(path + '/')
@@ -14,7 +13,8 @@ export default function TabBar() {
   const { pathname } = useLocation()
 
   const tabs = [
-    { path: '/', label: t('tab.eras'), icon: ErasIcon },
+    { path: '/', label: t('tab.home'), icon: HomeIcon },
+    { path: '/eras', label: t('tab.eras'), icon: ErasIcon },
     { path: '/popular', label: t('tab.sets'), icon: SetsIcon },
     { path: '/my-cards', label: t('tab.my'), icon: MyIcon },
     { path: '/settings', label: t('tab.settings'), icon: SettingsIcon },
@@ -37,12 +37,12 @@ export default function TabBar() {
               <Link
                 to={tab.path}
                 className={
-                  'flex flex-col items-center justify-center gap-0.5 px-2 py-2.5 transition ' +
+                  'flex flex-col items-center justify-center gap-px px-1 py-1.5 transition ' +
                   (active ? 'text-white' : 'text-white/65 hover:text-white')
                 }
               >
                 <Icon active={active} />
-                <span className={'text-[10px] leading-tight ' + (active ? 'font-medium' : '')}>
+                <span className={'text-[9px] leading-tight ' + (active ? 'font-medium' : '')}>
                   {tab.label}
                 </span>
               </Link>
@@ -57,8 +57,8 @@ export default function TabBar() {
 function svg(active, paths) {
   return (
     <svg
-      width="22"
-      height="22"
+      width="20"
+      height="20"
       viewBox="0 0 24 24"
       fill={active ? 'currentColor' : 'none'}
       stroke="currentColor"
@@ -71,8 +71,16 @@ function svg(active, paths) {
   )
 }
 
+function HomeIcon({ active }) {
+  return svg(
+    active,
+    <>
+      <path d="m3 11 9-8 9 8v10a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1z" />
+    </>,
+  )
+}
+
 function ErasIcon({ active }) {
-  // 堆叠的层 (代表世代)
   return svg(
     active,
     <>
@@ -84,7 +92,6 @@ function ErasIcon({ active }) {
 }
 
 function SetsIcon({ active }) {
-  // 网格 (代表系列集合)
   return svg(
     active,
     <>
@@ -97,7 +104,6 @@ function SetsIcon({ active }) {
 }
 
 function MyIcon({ active }) {
-  // 卡片图标
   return svg(
     active,
     <>

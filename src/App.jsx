@@ -8,10 +8,10 @@ export default function App() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      {/* 给底部 tab bar 留出空间: 56px (按钮) + safe-area-inset-bottom */}
+      {/* 给底部 tab bar 留出空间: 48px (按钮) + safe-area-inset-bottom */}
       <main
         className="mx-auto w-full max-w-6xl flex-1 px-4 pt-6"
-        style={{ paddingBottom: 'calc(56px + env(safe-area-inset-bottom) + 1rem)' }}
+        style={{ paddingBottom: 'calc(48px + env(safe-area-inset-bottom) + 1rem)' }}
       >
         <Outlet />
       </main>

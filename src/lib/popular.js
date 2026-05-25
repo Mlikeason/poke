@@ -12,6 +12,12 @@ export const POPULAR_SETS = [
   'sv4pt5', // Paldean Fates     2024-01-26
   'sv3pt5', // 151                2023-09-22
   'swsh12pt5', // Crown Zenith   2023-01-20
+  // Sun & Moon 经典
+  'sm12', // Cosmic Eclipse 2019-11
+  'sm115', // Hidden Fates 2019-08
+  'sm8', // Lost Thunder 2018-11
+  'sm35', // Shining Legends 2017-10
+  'sm3', // Burning Shadows 2017-08
 ]
 
 // 首页展示数量, 其余在 /popular
