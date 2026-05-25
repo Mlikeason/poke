@@ -48,6 +48,8 @@ const M = {
     'era.notFound': 'Era not found',
     'era.loading': 'Loading…',
     'era.sets': '{n} sets',
+    'era.setsWord': 'sets',
+    'era.cardsWord': 'cards',
 
     'set.empty': 'No matching cards',
     'set.loadError': 'Load failed: {msg}',
@@ -134,6 +136,8 @@ const M = {
     'era.notFound': '找不到世代',
     'era.loading': '加载中…',
     'era.sets': '{n} 个系列',
+    'era.setsWord': '系列',
+    'era.cardsWord': '张',
 
     'set.empty': '没匹配的卡',
     'set.loadError': '加载失败: {msg}',

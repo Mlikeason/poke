@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCollection, useSets } from '../hooks.js'
 import { ERAS, groupSetsByEra } from '../lib/eras.js'
@@ -17,14 +16,12 @@ export default function Home() {
   const t = useT()
   const sets = useSets()
   const col = useCollection()
-  const [archiveOpen, setArchiveOpen] = useState(false)
 
   if (!sets) return <div className="py-20 text-center text-slate-400">{t('home.loading')}</div>
 
   const grouped = groupSetsByEra(sets)
   const stats = statsByEra(sets, col.cards)
   const recent = ERAS.filter((e) => e.bucket === 'recent')
-  const archive = ERAS.filter((e) => e.bucket === 'archive')
 
   const ownedAll = uniqueOwnedCount(col.cards)
   const totalAll = totalCardsInSets(sets)
@@ -79,7 +76,6 @@ export default function Home() {
             <EraCard
               key={era.id}
               era={era}
-              owned={stats[era.id]?.owned || 0}
               total={stats[era.id]?.total || 0}
               setCount={(grouped.get(era.id) || []).length}
               compact
@@ -88,37 +84,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section>
-        <button
-          onClick={() => setArchiveOpen((v) => !v)}
-          className="flex w-full items-center justify-between rounded-2xl border border-white/60 bg-white/60 px-5 py-3 text-left backdrop-blur transition hover:bg-white/80"
-        >
-          <span className="text-sm font-medium text-slate-600">
-            {t('home.archive', { n: archive.length })}
-          </span>
-          <ChevronRight
-            size={16}
-            className={
-              'text-slate-400 transition-transform ' + (archiveOpen ? 'rotate-90' : '')
-            }
-          />
-        </button>
-
-        {archiveOpen && (
-          <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
-            {archive.map((era) => (
-              <EraCard
-                key={era.id}
-                era={era}
-                owned={stats[era.id]?.owned || 0}
-                total={stats[era.id]?.total || 0}
-                setCount={(grouped.get(era.id) || []).length}
-                compact
-              />
-            ))}
-          </div>
-        )}
-      </section>
     </div>
   )
 }
