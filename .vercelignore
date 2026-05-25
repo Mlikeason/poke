@@ -1,0 +1,5 @@
+# Vercel 部署时跳过 (大文件 + 不需要的)
+public/cards/
+node_modules
+dist
+.git
