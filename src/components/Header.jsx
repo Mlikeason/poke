@@ -12,7 +12,10 @@ export default function Header() {
   const [showSearch, setShowSearch] = useState(false)
 
   return (
-    <header className="sticky top-0 z-30 border-b border-white/30 bg-white/70 backdrop-blur-md">
+    <header
+      className="sticky top-0 z-30 border-b border-white/30 bg-white/70 backdrop-blur-md"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
         <Link to="/" className="flex shrink-0 items-center gap-2 text-base font-medium text-slate-900">
           <Pokeball />

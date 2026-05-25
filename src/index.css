@@ -19,6 +19,8 @@ body {
   background-attachment: fixed;
   color: #1f1d2b;
   margin: 0;
+  /* iPhone home indicator (底部安全区) */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 h1, h2, h3, h4 {
