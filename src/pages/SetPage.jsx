@@ -5,7 +5,6 @@ import { getCardsForSet } from '../lib/api.js'
 import { eraForSeries, eraById } from '../lib/eras.js'
 import { ownedInSet } from '../lib/stats.js'
 import CardTile from '../components/CardTile.jsx'
-import ProgressBar from '../components/ProgressBar.jsx'
 import PackArt from '../components/PackArt.jsx'
 import { setCode } from '../lib/setCode.js'
 import { isChase } from '../lib/chase.js'
@@ -99,9 +98,6 @@ export default function SetPage() {
               <span>{owned} / {total}</span>
               <span className="text-slate-300">·</span>
               <span>{total > 0 ? Math.round((owned / total) * 100) : 0}%</span>
-            </div>
-            <div className="mt-2 max-w-md">
-              <ProgressBar value={owned} max={total} gradient={gradient} />
             </div>
           </div>
           {/* Pack art (右侧, 仅当 public/packs/<setId>.* 存在时显示) */}

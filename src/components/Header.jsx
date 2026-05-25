@@ -20,9 +20,18 @@ export default function Header() {
     >
       {/* 固定高度的单行布局 */}
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
-        <Link to="/" className="flex shrink-0 items-center gap-2 text-base font-medium text-slate-900">
+        <Link to="/" className="flex shrink-0 items-center gap-2">
           <Pokeball />
-          <span className="font-medium tracking-tight">{t('app.title')}</span>
+          <span
+            className="text-xl tracking-wide text-white"
+            style={{
+              fontFamily: '"Lilita One", system-ui, sans-serif',
+              textShadow: '0 1px 0 rgba(0,0,0,0.15)',
+              WebkitTextStroke: '0.5px rgba(0,0,0,0.25)',
+            }}
+          >
+            {t('app.title')}
+          </span>
         </Link>
 
         <div className="flex-1" />

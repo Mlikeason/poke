@@ -43,10 +43,8 @@ export default function Home() {
       <MyCollectionCard
         t={t}
         owned={ownedAll}
-        total={totalAll}
         valueUsd={valueUsd}
         wanted={wanted}
-        pct={pct}
       />
 
       {popularHome.length > 0 && (
@@ -125,7 +123,7 @@ export default function Home() {
   )
 }
 
-function MyCollectionCard({ t, owned, total, valueUsd, wanted, pct }) {
+function MyCollectionCard({ t, owned, valueUsd, wanted }) {
   return (
     <Link
       to="/my-cards"
@@ -157,19 +155,11 @@ function MyCollectionCard({ t, owned, total, valueUsd, wanted, pct }) {
           <ChevronRight size={18} className="text-slate-400 transition group-hover:translate-x-1 group-hover:text-slate-700" />
         </div>
 
-        <div className="relative mt-3 flex items-baseline gap-2">
-          <span className="text-5xl font-medium leading-none text-slate-900 sm:text-6xl">
-            {owned.toLocaleString()}
-          </span>
-          <span className="text-sm text-slate-500">
-            / {total.toLocaleString()}
-          </span>
-        </div>
-
-        <div className="relative mt-4 grid grid-cols-3 gap-2 text-xs sm:gap-4">
+        {/* 3 等分: 已有 / 价值 / 想要 */}
+        <div className="relative mt-4 grid grid-cols-3 gap-3">
+          <Stat label={t('home.cardsWord')} value={owned.toLocaleString()} />
           <Stat label={t('home.stat.value')} value={formatSgd(valueUsd)} />
           <Stat label={t('home.stat.wanted')} value={wanted.toLocaleString()} />
-          <Stat label={t('home.stat.complete')} value={`${pct.toFixed(1)}%`} />
         </div>
       </div>
     </Link>
@@ -179,8 +169,8 @@ function MyCollectionCard({ t, owned, total, valueUsd, wanted, pct }) {
 function Stat({ label, value }) {
   return (
     <div>
-      <div className="text-base font-medium text-slate-900 sm:text-lg">{value}</div>
-      <div className="text-[10px] uppercase tracking-wider text-slate-400">{label}</div>
+      <div className="truncate text-3xl font-medium leading-tight text-slate-900 sm:text-4xl">{value}</div>
+      <div className="mt-0.5 text-[10px] uppercase tracking-wider text-slate-400">{label}</div>
     </div>
   )
 }
