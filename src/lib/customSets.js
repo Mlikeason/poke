@@ -2,7 +2,32 @@
 // 现在 mode='jp' 时 app 会看到这个列表里所有 set
 import scrapedSets from '../data/jp-sets.json'
 
-export const JP_SETS = scrapedSets
+// card-binder 缺/不全的 set 在这里手补
+const MANUAL_SETS = [
+  {
+    id: 'sv8a',
+    name: 'Terastal Festival ex',
+    series: 'Scarlet & Violet',
+    printedTotal: 87,
+    total: 196,
+    ptcgoCode: 'SV8A',
+    releaseDate: '2024/12/06',
+    custom: true,
+  },
+  {
+    id: 'm4',
+    // 真实名字 / 数据卡片图待补 (card-binder 没上架)
+    name: 'M4 (TBD)',
+    series: 'Mega Evolution',
+    printedTotal: 80,
+    total: 100,
+    ptcgoCode: 'M4',
+    releaseDate: '2026/03/27', // m3 (1月) 和 m5 (5月) 之间的估计
+    custom: true,
+  },
+]
+
+export const JP_SETS = [...scrapedSets, ...MANUAL_SETS]
 
 // Popular / Home Popular 自动用 JP_SETS 全部, 按发布日期排
 const sortedIds = [...JP_SETS]
