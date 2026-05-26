@@ -16,13 +16,12 @@ const MANUAL_SETS = [
   },
   {
     id: 'm4',
-    // 真实名字 / 数据卡片图待补 (card-binder 没上架)
-    name: 'M4 (TBD)',
+    name: 'Ninja Spinner',
     series: 'Mega Evolution',
     printedTotal: 80,
     total: 100,
     ptcgoCode: 'M4',
-    releaseDate: '2026/03/27', // m3 (1月) 和 m5 (5月) 之间的估计
+    releaseDate: '2026/03/27', // 估计, m3 (1月) 和 m5 (5月) 之间
     custom: true,
   },
 ]
