@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Bulbapedia JP card extractor — bookmarklet</title>
+<style>
+  body { font: 14px/1.5 system-ui, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; color: #1f1d2b; }
+  h1 { font-size: 24px; }
+  .bm { display: inline-block; padding: 8px 14px; border-radius: 8px; background: #EE1515; color: white; text-decoration: none; font-weight: 600; }
+  ol li { margin: 10px 0; }
+  code { background: #f4f4f5; padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+  pre { background: #1f1d2b; color: #a7f3d0; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>📚 Bulbapedia JP card extractor</h1>
+
+<p>把下面这个红色按钮 <strong>拖到浏览器收藏栏</strong>:</p>
+
+<p><a class="bm" href="javascript:(async function(){const r=[...document.querySelectorAll('table tr')];const c=[];for(const row of r){const t=row.querySelectorAll('td');if(t.length<2)continue;const m=t[0].textContent.trim().match(/^(\d+)/);if(!m)continue;const n=m[1];const a=row.querySelector('a[href*=%22/wiki/%22]:not(.image)');if(!a)continue;c.push({num:n,name:a.textContent.trim(),link:a.href})}console.log('Found',c.length,'cards. Fetching detail pages...');let ok=0,fail=0;for(let i=0;i<c.length;i++){const card=c[i];try{const h=await fetch(card.link).then(r=>r.text());const d=new DOMParser().parseFromString(h,'text/html');let img=d.querySelector('table.roundy img,.infobox img,table img');if(img){let s=img.src||img.getAttribute('src');if(s.startsWith('//'))s='https:'+s;if(s.startsWith('/'))s='https://bulbapedia.bulbagarden.net'+s;s=s.replace('/thumb/','/').replace(/\\/\\d+px-[^\\/]+$/,'');card.imgUrl=s;ok++}else{fail++}}catch(e){fail++}if(i%10===9)await new Promise(r=>setTimeout(r,800));if(i%5===0)document.title='['+(i+1)+'/'+c.length+'] ext'}const b=new Blob([JSON.stringify(c,null,2)],{type:'application/json'});const a2=document.createElement('a');a2.href=URL.createObjectURL(b);const slug=(document.title||'set').replace(/\\[.*\\]/,'').split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g,'');a2.download='jp-cards-'+slug+'.json';a2.click();alert('Done. '+ok+' OK, '+fail+' fail. JSON downloaded.')})();">📥 Extract JP cards</a></p>
+
+<h2>怎么用</h2>
+
+<ol>
+<li>把上面红按钮 <strong>拖到收藏栏</strong>(Bookmarks Bar)。Chrome / Safari / Firefox 都行</li>
+<li>在浏览器打开 Bulbapedia 的 set 页, 例如:
+  <br><code>https://bulbapedia.bulbagarden.net/wiki/Mega_Brave_(TCG)</code></li>
+<li>等 Cloudflare 验证过去, 看到完整 wiki 页面</li>
+<li>点收藏栏上的 <strong>📥 Extract JP cards</strong></li>
+<li>等它跑完(每张卡进详情页拿原图 URL, 一张约 1 秒, M1L 92 张 ≈ 1.5 分钟)。浏览器 tab 标题会显示进度</li>
+<li>跑完自动弹一个 alert + 下载一个 <code>jp-cards-XXX.json</code> 文件</li>
+<li>把 JSON 文件挪到 <code>~/poke/</code> 根目录</li>
+<li>在终端跑:
+  <pre>cd ~/poke
+node scripts/download-jp-cards-from-json.js m1l ./jp-cards-megabrave.json</pre>
+  (第一个参数是 setId, 第二个是 JSON 文件路径)</li>
+<li>会下到 <code>public/cards/jp/m1l/&lt;编号&gt;.jpg</code> 并更新 manifest</li>
+<li>commit + push, Vercel 自动部署后 app 里就能看到</li>
+</ol>
+
+<h2>每个 JP set 的 Bulbapedia URL</h2>
+<pre>m1l   https://bulbapedia.bulbagarden.net/wiki/Mega_Brave_(TCG)
+m1s   https://bulbapedia.bulbagarden.net/wiki/Mega_Symphonia_(TCG)
+m2    https://bulbapedia.bulbagarden.net/wiki/Inferno_X_(TCG)
+m2a   https://bulbapedia.bulbagarden.net/wiki/Mega_Dream_(TCG)
+m3    https://bulbapedia.bulbagarden.net/wiki/Munikis_Zero_(TCG)
+m4    https://bulbapedia.bulbagarden.net/wiki/Ninja_Spinner_(TCG)
+m5    https://bulbapedia.bulbagarden.net/wiki/Abyss_Eye_(TCG)
+m6    https://bulbapedia.bulbagarden.net/wiki/Storm_Emeralda_(TCG)
+sv8a  https://bulbapedia.bulbagarden.net/wiki/Terastal_Festival_ex_(TCG)
+sv9   https://bulbapedia.bulbagarden.net/wiki/Battle_Partners_(TCG)
+sv9a  https://bulbapedia.bulbagarden.net/wiki/Heat_Wave_Arena_(TCG)
+sv10  https://bulbapedia.bulbagarden.net/wiki/The_Glory_of_Team_Rocket_(TCG)
+sv11b https://bulbapedia.bulbagarden.net/wiki/Black_Bolt_(TCG)
+sv11w https://bulbapedia.bulbagarden.net/wiki/White_Flare_(TCG)</pre>
+
+<p>如果某个页面 Bulbapedia 上叫别的名 (404), 在 Bulbapedia 搜一下找对的 URL.</p>
+
+</body>
+</html>
