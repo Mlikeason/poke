@@ -1,14 +1,13 @@
 // 按需拉某 set 的所有卡片, 带 localStorage 缓存
+// JP catalog 走占位逻辑, EN 走 pokemontcg.io API.
 import { mergePrices } from './collection.js'
-import { getCustomCards } from './customSets.js'
+import { getJpCardsForSet, isJpSet } from './customSets.js'
 
 const CACHE_PREFIX = 'poke.cards.v1.'
 
-// 从 API 的复杂 price 结构中挑一个稳的市场价 (USD)
 function pickPrice(c) {
   const tcg = c.tcgplayer?.prices || {}
   const cm = c.cardmarket?.prices || {}
-  // 优先顺序: tcgplayer normal market > holofoil > reverseHolofoil > cardmarket trend
   const candidates = [
     tcg.normal?.market,
     tcg.holofoil?.market,
@@ -26,9 +25,8 @@ function pickPrice(c) {
 }
 
 export async function getCardsForSet(setId) {
-  // 自定义 set (日文 set 等): 直接返回占位卡片, 不走 API
-  const custom = getCustomCards(setId)
-  if (custom) return custom
+  // JP set: 直接返回占位
+  if (isJpSet(setId)) return getJpCardsForSet(setId)
 
   const key = CACHE_PREFIX + setId
   try {
@@ -36,7 +34,6 @@ export async function getCardsForSet(setId) {
     if (cached) {
       const parsed = JSON.parse(cached)
       if (parsed && parsed.cards) {
-        // 把已缓存卡的价格回灌一次, 确保 collection state 拿得到
         const m = {}
         for (const c of parsed.cards) if (c.price != null) m[c.id] = c.price
         if (Object.keys(m).length) mergePrices(m)
@@ -83,7 +80,7 @@ export async function getCardsForSet(setId) {
   try {
     localStorage.setItem(key, JSON.stringify({ cards, fetchedAt: Date.now() }))
   } catch (e) {
-    console.warn('卡片数据缓存失败 (可能超出 localStorage 配额)', e)
+    console.warn('card cache write failed (localStorage quota?)', e)
   }
 
   return cards

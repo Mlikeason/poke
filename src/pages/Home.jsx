@@ -3,6 +3,8 @@ import { useCollection, useSets } from '../hooks.js'
 import { ERAS, groupSetsByEra } from '../lib/eras.js'
 import { statsByEra, uniqueOwnedCount, estimatedValue, ownedInSet, totalCardsInSets, wantedCount } from '../lib/stats.js'
 import { HOME_POPULAR, POPULAR_SETS } from '../lib/popular.js'
+import { JP_HOME_POPULAR, JP_POPULAR_SETS } from '../lib/customSets.js'
+import { useMode } from '../lib/mode.js'
 import { formatSgd } from '../lib/currency.js'
 import EraCard from '../components/EraCard.jsx'
 import PopularSetCard from '../components/PopularSetCard.jsx'
@@ -16,6 +18,7 @@ export default function Home() {
   const t = useT()
   const sets = useSets()
   const col = useCollection()
+  const mode = useMode()
 
   if (!sets) return <div className="py-20 text-center text-slate-400">{t('home.loading')}</div>
 
@@ -29,9 +32,11 @@ export default function Home() {
   const wanted = wantedCount(col.cards)
   const pct = totalAll > 0 ? (ownedAll / totalAll) * 100 : 0
 
-  // Home 用手工列表 (固定顺序), Sets 页全部按日期排
-  const popularHome = HOME_POPULAR.map((id) => sets.find((s) => s.id === id)).filter(Boolean)
-  const hasMorePopular = POPULAR_SETS.length > HOME_POPULAR.length
+  // mode 决定用哪一套 popular 列表
+  const homeList = mode === 'jp' ? JP_HOME_POPULAR : HOME_POPULAR
+  const popularList = mode === 'jp' ? JP_POPULAR_SETS : POPULAR_SETS
+  const popularHome = homeList.map((id) => sets.find((s) => s.id === id)).filter(Boolean)
+  const hasMorePopular = popularList.length > homeList.length
 
   return (
     <div className="space-y-8">

@@ -3,11 +3,10 @@ import { useSets, useCollection } from '../hooks.js'
 import { eraById, eraForSeries } from '../lib/eras.js'
 import { ownedInSet } from '../lib/stats.js'
 import SetCard from '../components/SetCard.jsx'
-import { useT, useLocale, eraDisplay } from '../lib/i18n.js'
+import { useT } from '../lib/i18n.js'
 
 export default function EraPage() {
   const t = useT()
-  const locale = useLocale()
   const { eraId } = useParams()
   const sets = useSets()
   const col = useCollection()
@@ -21,7 +20,6 @@ export default function EraPage() {
     .sort((a, b) => (a.releaseDate < b.releaseDate ? 1 : -1))
 
   const gradient = `linear-gradient(135deg, ${era.accent.from}, ${era.accent.to})`
-  const { primary, secondary } = eraDisplay(era, locale)
 
   return (
     <div className="space-y-6">
@@ -30,10 +28,8 @@ export default function EraPage() {
         style={{ background: gradient, color: era.accent.text }}
       >
         <div className="text-xs opacity-80">{era.years}</div>
-        <h1 className="text-3xl font-medium leading-tight">{primary}</h1>
-        <div className="mt-1 text-sm opacity-90">
-          {secondary ? `${secondary} · ` : ''}{t('era.sets', { n: mine.length })}
-        </div>
+        <h1 className="text-3xl font-medium leading-tight">{era.name}</h1>
+        <div className="mt-1 text-sm opacity-90">{t('era.sets', { n: mine.length })}</div>
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">

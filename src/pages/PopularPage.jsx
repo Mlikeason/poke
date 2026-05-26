@@ -1,5 +1,7 @@
 import { useSets, useCollection } from '../hooks.js'
 import { POPULAR_SETS } from '../lib/popular.js'
+import { JP_POPULAR_SETS } from '../lib/customSets.js'
+import { useMode } from '../lib/mode.js'
 import { ownedInSet } from '../lib/stats.js'
 import PopularSetCard from '../components/PopularSetCard.jsx'
 import { useT } from '../lib/i18n.js'
@@ -8,10 +10,13 @@ export default function PopularPage() {
   const t = useT()
   const sets = useSets()
   const col = useCollection()
+  const mode = useMode()
 
   if (!sets) return <div className="py-20 text-center text-slate-400">{t('era.loading')}</div>
 
-  const popular = POPULAR_SETS.map((id) => sets.find((s) => s.id === id))
+  const ids = mode === 'jp' ? JP_POPULAR_SETS : POPULAR_SETS
+  const popular = ids
+    .map((id) => sets.find((s) => s.id === id))
     .filter(Boolean)
     .sort((a, b) => (a.releaseDate < b.releaseDate ? 1 : -1))
 

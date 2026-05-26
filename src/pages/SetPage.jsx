@@ -8,13 +8,11 @@ import CardTile from '../components/CardTile.jsx'
 import PackArt from '../components/PackArt.jsx'
 import { setCode } from '../lib/setCode.js'
 import { isChase } from '../lib/chase.js'
-import { totalOwned } from '../lib/collection.js'
 import { sortByNumber, sortByRarity } from '../lib/sort.js'
-import { useT, useLocale, eraDisplay } from '../lib/i18n.js'
+import { useT } from '../lib/i18n.js'
 
 export default function SetPage() {
   const t = useT()
-  const locale = useLocale()
   const { setId } = useParams()
   const sets = useSets()
   const col = useCollection()
@@ -52,12 +50,12 @@ export default function SetPage() {
   const filtered = useMemo(() => {
     if (!cards) return []
     let arr = cards
-    if (filter === 'owned') arr = arr.filter((c) => totalOwned(col.cards[c.id]) > 0)
+    if (filter === 'owned') arr = arr.filter((c) => (col.cards[c.id]?.owned || 0) > 0)
     if (filter === 'wanted') {
       // 默认显示 chase cards + 用户手动标想要, 已拥有的不显示
       arr = arr.filter((c) => {
         const e = col.cards[c.id]
-        if (totalOwned(e) > 0) return false
+        if ((e?.owned || 0) > 0) return false
         return e?.wanted || isChase(c)
       })
     }
@@ -72,7 +70,7 @@ export default function SetPage() {
   const total = set?.total || cards?.length || 0
   const localImageBase = manifest[setId] ? `${import.meta.env.BASE_URL}cards/${setId}` : null
 
-  const { primary: eraPrimary } = era ? eraDisplay(era, locale) : { primary: '' }
+  const eraPrimary = era?.name || ''
 
   return (
     <div className="space-y-5">

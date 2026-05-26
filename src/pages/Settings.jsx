@@ -1,10 +1,11 @@
-import { useT, useLocale, setLocale } from '../lib/i18n.js'
+import { useT } from '../lib/i18n.js'
+import { useMode, setMode } from '../lib/mode.js'
 import { exportJson, importJson, reset } from '../lib/collection.js'
 import { clearCardCache } from '../lib/api.js'
 
 export default function Settings() {
   const t = useT()
-  const locale = useLocale()
+  const mode = useMode()
 
   const handleExport = () => {
     const blob = new Blob([exportJson()], { type: 'application/json' })
@@ -43,19 +44,20 @@ export default function Settings() {
     <div className="mx-auto max-w-2xl space-y-8">
       <h1 className="text-2xl font-medium text-slate-900">{t('settings.title')}</h1>
 
-      {/* Language */}
-      <Section title={t('settings.language')}>
-        <div className="flex gap-2">
+      {/* Catalog Mode */}
+      <Section title={t('settings.catalog')}>
+        <p className="text-sm text-slate-600">{t('settings.catalogHelp')}</p>
+        <div className="flex flex-col gap-2 sm:flex-row">
           {[
-            ['en', 'English'],
-            ['zh', '中文'],
+            ['en', t('settings.catalogEn')],
+            ['jp', t('settings.catalogJp')],
           ].map(([code, label]) => (
             <button
               key={code}
-              onClick={() => setLocale(code)}
+              onClick={() => setMode(code)}
               className={
-                'rounded-xl border px-4 py-2 text-sm transition ' +
-                (locale === code
+                'flex-1 rounded-xl border px-4 py-3 text-sm transition ' +
+                (mode === code
                   ? 'border-slate-900 bg-slate-900 text-white'
                   : 'border-slate-200 bg-white text-slate-700 hover:border-slate-400')
               }

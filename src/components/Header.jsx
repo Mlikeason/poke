@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import { useT } from '../lib/i18n.js'
+import { useMode } from '../lib/mode.js'
 import SearchBox from './SearchBox.jsx'
 
 export const POKE_RED = '#EE1515'
@@ -8,6 +9,7 @@ export const PIKACHU_YELLOW = '#FFCC00'
 
 export default function Header() {
   const t = useT()
+  const mode = useMode()
   const [showSearch, setShowSearch] = useState(false)
 
   return (
@@ -20,19 +22,28 @@ export default function Header() {
     >
       {/* 固定高度的单行布局 */}
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
-        <Link to="/" className="flex shrink-0 items-center gap-2">
-          <Pokeball />
-          <span
-            className="text-xl tracking-wide text-white"
-            style={{
-              fontFamily: '"Lilita One", system-ui, sans-serif',
-              textShadow: '0 1px 0 rgba(0,0,0,0.15)',
-              WebkitTextStroke: '0.5px rgba(0,0,0,0.25)',
-            }}
+        <div className="flex shrink-0 items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
+            <Pokeball />
+            <span
+              className="text-xl tracking-wide text-white"
+              style={{
+                fontFamily: '"Lilita One", system-ui, sans-serif',
+                textShadow: '0 1px 0 rgba(0,0,0,0.15)',
+                WebkitTextStroke: '0.5px rgba(0,0,0,0.25)',
+              }}
+            >
+              {t('app.title')}
+            </span>
+          </Link>
+          <Link
+            to="/settings"
+            title={mode === 'jp' ? 'Japanese catalog (tap to change)' : 'English catalog (tap to change)'}
+            className="rounded-md bg-black/85 px-1.5 py-0.5 font-mono text-[10px] font-medium text-white shadow-sm"
           >
-            {t('app.title')}
-          </span>
-        </Link>
+            {mode.toUpperCase()}
+          </Link>
+        </div>
 
         <div className="flex-1" />
 

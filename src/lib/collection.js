@@ -1,50 +1,76 @@
-// localStorage 持久化层 + 简单的订阅机制
-// v1 cardEntry: { owned: N, wanted: bool }   (旧版)
-// v1 cardEntry: { en: N, jp: N, wanted: bool } (新版, 双语)
-// 旧 owned 字段自动迁移到 en
-const KEY = 'poke.collection.v1'
+// EN 和 JP 各自独立的 collection 数据库 (separate localStorage keys)
+// 切 mode → 整个 state 替换成那个 mode 的数据, listeners 自动收到通知
+import { getMode, onModeChange } from './mode.js'
+
+const KEY_PREFIX = 'poke.collection.'
+const VERSION = 1
 
 const emptyState = () => ({
-  version: 1,
-  cards: {}, // cardId -> { en: 0, jp: 0, wanted: false }
+  version: VERSION,
+  cards: {}, // cardId -> { owned: N, wanted: bool }
   packs: {},
   customPrices: {},
   prices: {},
 })
 
-// 兼容老数据: { owned: N } → { en: N, jp: 0 }
-function migrateEntry(e) {
-  if (!e) return { en: 0, jp: 0, wanted: false }
-  if (e.owned !== undefined && e.en === undefined) {
-    return { en: e.owned, jp: 0, wanted: !!e.wanted, ...(e.notes ? { notes: e.notes } : {}) }
+// 把旧 { en, jp, wanted } 或更老的 { owned, wanted } 标准化成 { owned, wanted }
+// 老的 jp 字段已经按计划丢弃
+function normalizeEntry(e) {
+  if (!e) return { owned: 0, wanted: false }
+  const owned = e.owned !== undefined ? e.owned : e.en !== undefined ? e.en : 0
+  return {
+    owned: Math.max(0, Math.floor(owned)),
+    wanted: !!e.wanted,
+    ...(e.notes ? { notes: e.notes } : {}),
   }
-  return { en: e.en || 0, jp: e.jp || 0, wanted: !!e.wanted, ...(e.notes ? { notes: e.notes } : {}) }
 }
 
-function load() {
+function loadFor(mode) {
+  // mode='en': 优先读旧 key poke.collection.v1 (向前兼容一次性迁移); 之后读新 key
+  // mode='jp': 全新空数据库
+  const newKey = KEY_PREFIX + mode + '.v1'
   try {
-    const raw = localStorage.getItem(KEY)
+    let raw = localStorage.getItem(newKey)
+    if (!raw && mode === 'en') {
+      // 一次性迁移: 老的统一 key 把数据搬到 EN
+      raw = localStorage.getItem('poke.collection.v1')
+      if (raw) {
+        const old = JSON.parse(raw)
+        if (old && old.version === VERSION) {
+          const cards = {}
+          for (const [id, e] of Object.entries(old.cards || {})) cards[id] = normalizeEntry(e)
+          const data = { ...emptyState(), ...old, cards }
+          localStorage.setItem(newKey, JSON.stringify(data))
+          return data
+        }
+      }
+    }
     if (!raw) return emptyState()
     const data = JSON.parse(raw)
-    if (!data || data.version !== 1) return emptyState()
-    // 迁移所有 card entry
+    if (!data || data.version !== VERSION) return emptyState()
     const cards = {}
-    for (const [id, e] of Object.entries(data.cards || {})) {
-      cards[id] = migrateEntry(e)
-    }
+    for (const [id, e] of Object.entries(data.cards || {})) cards[id] = normalizeEntry(e)
     return { ...emptyState(), ...data, cards }
   } catch {
     return emptyState()
   }
 }
 
-let state = load()
+let mode = getMode()
+let state = loadFor(mode)
 const listeners = new Set()
+
+// mode 切换时, 整个 state 重新加载 + 通知
+onModeChange((m) => {
+  mode = m
+  state = loadFor(m)
+  for (const l of listeners) l(state)
+})
 
 function persist() {
   state = { ...state }
   try {
-    localStorage.setItem(KEY, JSON.stringify(state))
+    localStorage.setItem(KEY_PREFIX + mode + '.v1', JSON.stringify(state))
   } catch (e) {
     console.error('localStorage write failed', e)
   }
@@ -61,28 +87,24 @@ export function subscribe(fn) {
 }
 
 export function getCardEntry(cardId) {
-  return state.cards[cardId] || { en: 0, jp: 0, wanted: false }
+  return state.cards[cardId] || { owned: 0, wanted: false }
 }
 
-// lang = 'en' | 'jp'
-export function setOwned(cardId, n, lang = 'en') {
-  const v = Math.max(0, Math.floor(n))
+export function setOwned(cardId, n) {
+  const owned = Math.max(0, Math.floor(n))
   const cur = getCardEntry(cardId)
-  state.cards = { ...state.cards, [cardId]: { ...cur, [lang]: v } }
+  state.cards = { ...state.cards, [cardId]: { ...cur, owned } }
   persist()
 }
 
-export function incOwned(cardId, delta, lang = 'en') {
+export function incOwned(cardId, delta) {
   const cur = getCardEntry(cardId)
-  setOwned(cardId, (cur[lang] || 0) + delta, lang)
+  setOwned(cardId, cur.owned + delta)
 }
 
 export function toggleWanted(cardId) {
   const cur = getCardEntry(cardId)
-  state.cards = {
-    ...state.cards,
-    [cardId]: { ...cur, wanted: !cur.wanted },
-  }
+  state.cards = { ...state.cards, [cardId]: { ...cur, wanted: !cur.wanted } }
   persist()
 }
 
@@ -117,26 +139,40 @@ export function setCustomPrice(cardId, usd) {
 }
 
 export function exportJson() {
-  return JSON.stringify(state, null, 2)
+  // 导出当前 mode + 另一个 mode 全部, 方便备份
+  const all = { mode, ...{} }
+  try {
+    all.en = JSON.parse(localStorage.getItem(KEY_PREFIX + 'en.v1') || 'null')
+    all.jp = JSON.parse(localStorage.getItem(KEY_PREFIX + 'jp.v1') || 'null')
+  } catch {}
+  return JSON.stringify(all, null, 2)
 }
 
 export function importJson(text) {
   const parsed = JSON.parse(text)
-  if (!parsed || typeof parsed !== 'object') throw new Error('格式不对')
-  const cards = {}
-  for (const [id, e] of Object.entries(parsed.cards || {})) {
-    cards[id] = migrateEntry(e)
+  if (!parsed || typeof parsed !== 'object') throw new Error('format invalid')
+  // 双 mode 备份格式 { mode, en, jp }
+  if (parsed.en || parsed.jp) {
+    if (parsed.en) localStorage.setItem(KEY_PREFIX + 'en.v1', JSON.stringify(parsed.en))
+    if (parsed.jp) localStorage.setItem(KEY_PREFIX + 'jp.v1', JSON.stringify(parsed.jp))
+  } else {
+    // 旧格式 (单 collection) 视为当前 mode
+    const cards = {}
+    for (const [id, e] of Object.entries(parsed.cards || {})) cards[id] = normalizeEntry(e)
+    localStorage.setItem(
+      KEY_PREFIX + mode + '.v1',
+      JSON.stringify({ ...emptyState(), ...parsed, cards }),
+    )
   }
-  state = { ...emptyState(), ...parsed, cards, version: 1 }
-  persist()
+  state = loadFor(mode)
+  for (const l of listeners) l(state)
 }
 
 export function reset() {
+  // 只清空当前 mode 的数据, 另一个 mode 不动
   state = emptyState()
-  persist()
-}
-
-// 工具: 一张卡的总持有数 (en + jp)
-export function totalOwned(entry) {
-  return (entry?.en || 0) + (entry?.jp || 0)
+  try {
+    localStorage.setItem(KEY_PREFIX + mode + '.v1', JSON.stringify(state))
+  } catch {}
+  for (const l of listeners) l(state)
 }

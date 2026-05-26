@@ -1,7 +1,7 @@
-// 手工定义的 set (pokemontcg.io API 之外的, 如日文 set).
-// 没有 cards 数据时 getCustomCards 生成编号占位.
+// 日文 catalog 的 set 数据 (mode='jp' 时使用).
+// 完整 JP 爬虫还没做, 先手工列你拥有的几个. 每加一个就多支持一个 JP set.
 
-export const CUSTOM_SETS = [
+export const JP_SETS = [
   {
     id: 'm1l',
     name: 'Mega Brave',
@@ -9,7 +9,6 @@ export const CUSTOM_SETS = [
     printedTotal: 56,
     total: 64,
     ptcgoCode: 'M1L',
-    // 日版第一个 Mega Evolution set, 实际发布日有出入可改
     releaseDate: '2025/05/02',
     symbol: '',
     logo: '',
@@ -17,9 +16,13 @@ export const CUSTOM_SETS = [
   },
 ]
 
-// 生成占位卡片 (没有 API 数据时)
-export function getCustomCards(setId) {
-  const set = CUSTOM_SETS.find((s) => s.id === setId)
+// JP catalog 的 chase / popular / era 配置可以慢慢加, 现在 JP_SETS 才一个
+export const JP_POPULAR_SETS = ['m1l']
+export const JP_HOME_POPULAR = ['m1l']
+
+// 生成占位卡 (没有 JP cards API 数据时)
+export function getJpCardsForSet(setId) {
+  const set = JP_SETS.find((s) => s.id === setId)
   if (!set) return null
   const cards = []
   for (let i = 1; i <= (set.total || set.printedTotal || 1); i++) {
@@ -41,6 +44,6 @@ export function getCustomCards(setId) {
   return cards
 }
 
-export function isCustomSet(setId) {
-  return CUSTOM_SETS.some((s) => s.id === setId)
+export function isJpSet(setId) {
+  return JP_SETS.some((s) => s.id === setId)
 }

@@ -1,36 +1,41 @@
 import { useEffect, useState } from 'react'
 import { getState, subscribe, mergePrices } from './lib/collection.js'
-import { CUSTOM_SETS } from './lib/customSets.js'
+import { useMode } from './lib/mode.js'
+import { JP_SETS } from './lib/customSets.js'
 
-// 让组件订阅 collection 变化
+// collection state (mode 切换时自动 reload)
 export function useCollection() {
   const [s, set] = useState(getState())
   useEffect(() => subscribe(set), [])
   return s
 }
 
-// 拉 public/sets.json, 并合并手工自定义 set (日文 set 等)
+// 根据当前 mode 返回 sets:
+//   EN mode: 拉 public/sets.json (173 个)
+//   JP mode: 用 JP_SETS (手工维护, 目前只有 M1L)
 export function useSets() {
-  const [sets, setSets] = useState(null)
+  const mode = useMode()
+  const [enSets, setEnSets] = useState(null)
+
   useEffect(() => {
+    if (enSets) return
     fetch(import.meta.env.BASE_URL + 'sets.json')
       .then((r) => r.json())
-      .then((api) => {
-        const merged = [...CUSTOM_SETS, ...api].sort((a, b) =>
-          a.releaseDate < b.releaseDate ? 1 : -1,
-        )
-        setSets(merged)
-      })
+      .then(setEnSets)
       .catch((e) => {
         console.error('sets.json load failed', e)
-        setSets([...CUSTOM_SETS])
+        setEnSets([])
       })
-  }, [])
-  return sets
+  }, [enSets])
+
+  if (mode === 'jp') {
+    return [...JP_SETS].sort((a, b) => (a.releaseDate < b.releaseDate ? 1 : -1))
+  }
+  return enSets
 }
 
-// 启动时把 public/prices.json 一次性合并进 collection.prices
-// (覆盖所有 set, 无需等用户浏览; 文件由 scripts/fetch-prices.js 生成)
+// 启动一次性把 public/prices.json (EN 全量价格) 灌进 EN collection.
+// JP mode 暂时没有价格数据.
 let bootPricesLoaded = false
 export function useBootPrices() {
   useEffect(() => {
@@ -45,7 +50,6 @@ export function useBootPrices() {
   }, [])
 }
 
-// public/cards/manifest.json: { setId: true } - 哪些 set 已经把卡片图下载到本地
 export function useImageManifest() {
   const [m, setM] = useState({})
   useEffect(() => {

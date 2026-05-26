@@ -1,11 +1,10 @@
 import { useState } from 'react'
-import { incOwned, toggleWanted, setCustomPrice, totalOwned } from '../lib/collection.js'
+import { incOwned, toggleWanted, setCustomPrice } from '../lib/collection.js'
 import { useT } from '../lib/i18n.js'
 import { formatSgd, DEFAULT_USD } from '../lib/currency.js'
 import { setCode } from '../lib/setCode.js'
 
 const PIKACHU_YELLOW = '#FFCC00'
-const POKE_RED = '#EE1515'
 
 const RARITY_TONE = {
   Common: 'bg-slate-100 text-slate-600',
@@ -19,9 +18,8 @@ const RARITY_TONE = {
 
 export default function CardTile({ card, entry, customPrice, localImageBase, showSet, readonly }) {
   const t = useT()
-  const e = entry || { en: 0, jp: 0, wanted: false }
-  const total = totalOwned(e)
-  const owned = total > 0
+  const e = entry || { owned: 0, wanted: false }
+  const owned = (e.owned || 0) > 0
   const wanted = e.wanted
   const [zoom, setZoom] = useState(false)
   const [editingPrice, setEditingPrice] = useState(false)
@@ -38,7 +36,6 @@ export default function CardTile({ card, entry, customPrice, localImageBase, sho
   return (
     <div className="group relative">
       <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-xl">
-        {/* 图片区 + overlays */}
         <button
           type="button"
           onClick={() => setZoom(true)}
@@ -61,7 +58,6 @@ export default function CardTile({ card, entry, customPrice, localImageBase, sho
             <div className="grid aspect-[245/342] place-items-center text-slate-300">·</div>
           )}
 
-          {/* 顶左: wanted heart toggle (常驻, 状态不同样式) */}
           {!readonly && (
             <span
               role="button"
@@ -81,17 +77,15 @@ export default function CardTile({ card, entry, customPrice, localImageBase, sho
             </span>
           )}
 
-          {/* 右下: 总持有 ×N badge (overlay on image) */}
           {owned && (
             <span
               className="absolute bottom-2 right-2 grid h-7 min-w-[1.75rem] place-items-center rounded-full px-1.5 text-xs font-semibold text-slate-900 shadow-md"
               style={{ background: PIKACHU_YELLOW }}
             >
-              ×{total}
+              ×{e.owned}
             </span>
           )}
 
-          {/* 可选: set code (在 my-cards 这种跨 set 列表中) */}
           {showSet && card.setId && (
             <span className="absolute bottom-2 left-2 rounded-md bg-black/75 px-1.5 py-0.5 font-mono text-[10px] font-medium text-white backdrop-blur">
               {setCode(card.setId)}
@@ -99,9 +93,7 @@ export default function CardTile({ card, entry, customPrice, localImageBase, sho
           )}
         </button>
 
-        {/* 信息条 */}
         <div className="space-y-1 p-2">
-          {/* 名称 + 稀有度 (内联省一行) + 编号 */}
           <div className="flex items-baseline justify-between gap-1.5">
             <div className="flex min-w-0 flex-1 items-baseline gap-1.5">
               <h4 className="shrink truncate text-sm font-medium text-slate-900" title={card.name}>{card.name}</h4>
@@ -117,7 +109,6 @@ export default function CardTile({ card, entry, customPrice, localImageBase, sho
             <span className="shrink-0 font-mono text-[10px] text-slate-400">#{card.number}</span>
           </div>
 
-          {/* 价格 */}
           <div className="text-[11px]">
             {readonly ? (
               <div className="flex items-center justify-between text-slate-600">
@@ -163,31 +154,31 @@ export default function CardTile({ card, entry, customPrice, localImageBase, sho
             )}
           </div>
 
-          {/* EN/JP 双计数器 (非 readonly) */}
+          {/* 单 +/- 计数 */}
           {!readonly && (
-            <div className="flex items-center justify-between gap-1 pt-1">
-              <Counter
-                count={e.en || 0}
-                onInc={() => incOwned(card.id, 1, 'en')}
-                onDec={() => incOwned(card.id, -1, 'en')}
-                accent={PIKACHU_YELLOW}
-                accentText="#1f1d2b"
-                title="EN"
-              />
-              <Counter
-                count={e.jp || 0}
-                onInc={() => incOwned(card.id, 1, 'jp')}
-                onDec={() => incOwned(card.id, -1, 'jp')}
-                accent={POKE_RED}
-                accentText="#ffffff"
-                title="JP"
-              />
+            <div className="flex items-center justify-center gap-1 pt-1">
+              <button
+                onClick={() => incOwned(card.id, -1)}
+                disabled={e.owned <= 0}
+                className="grid h-7 w-7 place-items-center rounded-full border border-slate-200 text-slate-600 transition active:scale-90 enabled:hover:bg-slate-100 disabled:opacity-30"
+              >
+                −
+              </button>
+              <span className={'min-w-[1.5rem] text-center text-sm font-medium ' + (owned ? 'text-slate-900' : 'text-slate-300')}>
+                {e.owned}
+              </span>
+              <button
+                onClick={() => incOwned(card.id, 1)}
+                className="grid h-7 w-7 place-items-center rounded-full text-base font-semibold shadow transition active:scale-90 hover:brightness-95"
+                style={{ background: PIKACHU_YELLOW, color: '#1f1d2b' }}
+              >
+                +
+              </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* 放大 modal */}
       {zoom && (
         <div
           onClick={() => setZoom(false)}
@@ -205,30 +196,6 @@ export default function CardTile({ card, entry, customPrice, localImageBase, sho
           />
         </div>
       )}
-    </div>
-  )
-}
-
-function Counter({ count, onInc, onDec, accent, accentText, title }) {
-  return (
-    <div className="flex items-center gap-0.5" title={title}>
-      <button
-        onClick={onDec}
-        disabled={count <= 0}
-        className="grid h-6 w-6 place-items-center rounded-full border border-slate-200 text-slate-600 transition active:scale-90 enabled:hover:bg-slate-100 disabled:opacity-30"
-      >
-        −
-      </button>
-      <span className={'min-w-[1rem] text-center text-xs font-medium ' + (count > 0 ? 'text-slate-900' : 'text-slate-300')}>
-        {count}
-      </span>
-      <button
-        onClick={onInc}
-        className="grid h-6 w-6 place-items-center rounded-full text-sm font-semibold shadow transition active:scale-90 hover:brightness-95"
-        style={{ background: accent, color: accentText }}
-      >
-        +
-      </button>
     </div>
   )
 }

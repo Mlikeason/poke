@@ -1,10 +1,8 @@
 import { Link } from 'react-router-dom'
-import { useT, useLocale, eraDisplay } from '../lib/i18n.js'
+import { useT } from '../lib/i18n.js'
 
 export default function EraCard({ era, total, setCount, compact }) {
   const t = useT()
-  const locale = useLocale()
-  const { primary } = eraDisplay(era, locale)
   const gradient = `linear-gradient(135deg, ${era.accent.from}, ${era.accent.to})`
 
   const padding = compact ? 'p-3' : 'p-4 sm:p-5'
@@ -26,7 +24,7 @@ export default function EraCard({ era, total, setCount, compact }) {
         {era.emoji}
       </div>
       <div className="relative">
-        <h3 className={'truncate pr-7 font-medium leading-tight ' + titleSize}>{primary}</h3>
+        <h3 className={'truncate pr-7 font-medium leading-tight ' + titleSize}>{era.name}</h3>
         <div className={'mt-0.5 opacity-80 ' + yearSize}>{era.years}</div>
         <div className={'mt-2 opacity-95 ' + statSize}>
           <span className="font-medium">{setCount}</span> {t('era.setsWord')}{' '}
