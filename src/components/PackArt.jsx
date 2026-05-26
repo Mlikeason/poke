@@ -16,6 +16,8 @@ export default function PackArt({ setId, logo, alt, className, gradient, hideIfM
     : `${import.meta.env.BASE_URL}packs/${setId}`
   const [extIdx, setExtIdx] = useState(0)
   const [failed, setFailed] = useState(false)
+  // 横向 logo 占位图 (>1 aspect) 不裁切, 上下留白
+  const [wide, setWide] = useState(false)
 
   if (failed) {
     if (hideIfMissing) return null
@@ -36,7 +38,7 @@ export default function PackArt({ setId, logo, alt, className, gradient, hideIfM
       src={`${base}.${EXTS[extIdx]}`}
       alt={alt}
       loading="lazy"
-      className={'object-cover ' + (className || '')}
+      className={(wide ? 'object-contain' : 'object-cover') + ' ' + (className || '')}
       onError={() => {
         if (extIdx < EXTS.length - 1) {
           setExtIdx(extIdx + 1)
@@ -45,7 +47,11 @@ export default function PackArt({ setId, logo, alt, className, gradient, hideIfM
           onResolve?.(false)
         }
       }}
-      onLoad={() => onResolve?.(true)}
+      onLoad={(ev) => {
+        const img = ev.currentTarget
+        if (img.naturalWidth > img.naturalHeight) setWide(true)
+        onResolve?.(true)
+      }}
     />
   )
 }
