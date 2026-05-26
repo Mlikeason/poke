@@ -1,12 +1,19 @@
 import { useState } from 'react'
+import { useMode } from '../lib/mode.js'
 
-// 卡包 wrapper 图. 如果用户在 public/packs/<setId>.{png|jpg|webp} 放了图就显示, 否则:
-// - hideIfMissing=true: 返回 null (调用方应自己根据 onResolve 隐藏 wrapper)
-// - 默认: 回退到 logo + 渐变背景
+// 卡包 wrapper 图. 根据 mode 找:
+//   EN mode → public/packs/<setId>.{ext}
+//   JP mode → public/packs/jp/<setId>.{ext}
+// 没找到的处理:
+//   hideIfMissing=true: 返回 null (调用方根据 onResolve 隐藏 wrapper)
+//   默认: 回退 logo + gradient
 const EXTS = ['png', 'jpg', 'jpeg', 'webp']
 
 export default function PackArt({ setId, logo, alt, className, gradient, hideIfMissing, onResolve }) {
-  const base = `${import.meta.env.BASE_URL}packs/${setId}`
+  const mode = useMode()
+  const base = mode === 'jp'
+    ? `${import.meta.env.BASE_URL}packs/jp/${setId}`
+    : `${import.meta.env.BASE_URL}packs/${setId}`
   const [extIdx, setExtIdx] = useState(0)
   const [failed, setFailed] = useState(false)
 

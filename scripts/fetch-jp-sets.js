@@ -10,7 +10,8 @@ import { fileURLToPath } from 'node:url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
 const DATA_DIR = resolve(ROOT, 'src', 'data')
-const PACKS_DIR = resolve(ROOT, 'public', 'packs')
+// JP pack 图统一进 packs/jp/, 和 EN 同名 set (如 sv10) 分开存
+const PACKS_DIR = resolve(ROOT, 'public', 'packs', 'jp')
 const SHOP = 'https://card-binder.com'
 
 const UA = {
