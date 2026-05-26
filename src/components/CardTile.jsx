@@ -55,7 +55,13 @@ export default function CardTile({ card, entry, customPrice, localImageBase, sho
               }}
             />
           ) : (
-            <div className="grid aspect-[245/342] place-items-center text-slate-300">·</div>
+            // 无图占位: 显示卡名 + 大编号, 不是只一个点
+            <div
+              className="flex aspect-[245/342] w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-slate-50 to-slate-200 p-3 text-center"
+            >
+              <span className="font-mono text-3xl font-medium text-slate-500">#{card.number}</span>
+              <span className="line-clamp-3 text-xs leading-tight text-slate-600">{card.name}</span>
+            </div>
           )}
 
           {!readonly && (
