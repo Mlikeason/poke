@@ -12,8 +12,10 @@ dist
 dist-ssr
 *.local
 
-# 本地下载的卡片图 (太大, 不上 Vercel; 部署时 App 自动 fallback 到 pokemontcg.io)
-/public/cards/
+# EN 卡片图本地缓存 (太大, 不上 Vercel; 部署时 App 自动 fallback 到 pokemontcg.io)
+/public/cards/*
+# 但 JP 卡片图保留 (规模小, 来源不稳, 部署时一并上)
+!/public/cards/jp/
 
 # Editor directories and files
 .vscode/*

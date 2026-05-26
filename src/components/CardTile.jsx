@@ -16,7 +16,7 @@ const RARITY_TONE = {
   'Rare Rainbow': 'bg-gradient-to-r from-pink-100 to-cyan-100 text-slate-800',
 }
 
-export default function CardTile({ card, entry, customPrice, localImageBase, showSet, readonly }) {
+export default function CardTile({ card, entry, customPrice, localImageBase, localImageExt = 'png', showSet, readonly }) {
   const t = useT()
   const e = entry || { owned: 0, wanted: false }
   const owned = (e.owned || 0) > 0
@@ -30,8 +30,10 @@ export default function CardTile({ card, entry, customPrice, localImageBase, sho
 
   const rarityCls = RARITY_TONE[card.rarity] || 'bg-slate-100 text-slate-600'
 
-  const src = localImageBase ? `${localImageBase}/${card.number}.png` : card.img
-  const srcLarge = localImageBase ? `${localImageBase}/${card.number}_hires.png` : card.imgLarge
+  const src = localImageBase ? `${localImageBase}/${card.number}.${localImageExt}` : card.img
+  const srcLarge = localImageBase
+    ? `${localImageBase}/${card.number}_hires.${localImageExt}`
+    : card.imgLarge
 
   return (
     <div className="group relative">

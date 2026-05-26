@@ -50,13 +50,16 @@ export function useBootPrices() {
   }, [])
 }
 
+// public/cards/manifest.json (EN) 或 public/cards/jp/manifest.json (JP)
 export function useImageManifest() {
+  const mode = useMode()
   const [m, setM] = useState({})
   useEffect(() => {
-    fetch(import.meta.env.BASE_URL + 'cards/manifest.json')
+    const path = mode === 'jp' ? 'cards/jp/manifest.json' : 'cards/manifest.json'
+    fetch(import.meta.env.BASE_URL + path)
       .then((r) => (r.ok ? r.json() : {}))
       .then((j) => setM(j || {}))
       .catch(() => setM({}))
-  }, [])
+  }, [mode])
   return m
 }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useSets, useCollection, useImageManifest } from '../hooks.js'
+import { useMode } from '../lib/mode.js'
 import { getCardsForSet } from '../lib/api.js'
 import { eraForSeries, eraById } from '../lib/eras.js'
 import { ownedInSet } from '../lib/stats.js'
@@ -17,6 +18,7 @@ export default function SetPage() {
   const sets = useSets()
   const col = useCollection()
   const manifest = useImageManifest()
+  const mode = useMode()
   const [cards, setCards] = useState(null)
   const [err, setErr] = useState(null)
   const [filter, setFilter] = useState('owned') // owned (default) | all | wanted
@@ -68,7 +70,13 @@ export default function SetPage() {
 
   const owned = set ? ownedInSet(col.cards, set.id) : 0
   const total = set?.total || cards?.length || 0
-  const localImageBase = manifest[setId] ? `${import.meta.env.BASE_URL}cards/${setId}` : null
+  // EN: /cards/<setId>/<n>.png; JP (from Bulbapedia scrape): /cards/jp/<setId>/<n>.jpg
+  const localImageBase = manifest[setId]
+    ? (mode === 'jp'
+        ? `${import.meta.env.BASE_URL}cards/jp/${setId}`
+        : `${import.meta.env.BASE_URL}cards/${setId}`)
+    : null
+  const localImageExt = mode === 'jp' ? 'jpg' : 'png'
 
   const eraPrimary = era?.name || ''
 
@@ -173,6 +181,7 @@ export default function SetPage() {
                   entry={col.cards[c.id]}
                   customPrice={col.customPrices[c.id]}
                   localImageBase={localImageBase}
+                  localImageExt={localImageExt}
                 />
               ))}
             </div>
