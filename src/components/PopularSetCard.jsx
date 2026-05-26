@@ -10,7 +10,7 @@ export default function PopularSetCard({ set, owned }) {
       to={`/set/${set.id}`}
       className="group flex w-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-xl"
     >
-      <div className="relative aspect-[3/4] overflow-hidden bg-white">
+      <div className="relative aspect-square overflow-hidden bg-white">
         <PackArt
           setId={set.id}
           logo={set.logo}
