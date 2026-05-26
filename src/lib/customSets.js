@@ -1,8 +1,10 @@
-// JP catalog 数据: 从 src/data/jp-sets.json 加载 (由 scripts/fetch-jp-sets.js 生成)
-// 现在 mode='jp' 时 app 会看到这个列表里所有 set
+// JP catalog 数据.
+// jp-sets.json + jp-cards.json: TCGdex 抓取 (scripts/fetch-jp-tcgdex.js)
+// MANUAL_SETS: TCGdex 还没有的 set (新发布/未来发布), 用占位卡片
 import scrapedSets from '../data/jp-sets.json'
+import scrapedCards from '../data/jp-cards.json'
 
-// card-binder 缺/不全的 set 在这里手补
+// TCGdex 暂无的 set 在这里手补 (用占位卡)
 const MANUAL_SETS = [
   {
     id: 'sv8a',
@@ -15,30 +17,80 @@ const MANUAL_SETS = [
     custom: true,
   },
   {
+    id: 'm2a',
+    name: 'Mega Dream',
+    series: 'Mega Evolution',
+    printedTotal: 80,
+    total: 100,
+    ptcgoCode: 'M2A',
+    releaseDate: '2025/11/28',
+    custom: true,
+  },
+  {
     id: 'm4',
     name: 'Ninja Spinner',
     series: 'Mega Evolution',
     printedTotal: 80,
     total: 100,
     ptcgoCode: 'M4',
-    releaseDate: '2026/03/27', // 估计, m3 (1月) 和 m5 (5月) 之间
+    releaseDate: '2026/03/27',
+    custom: true,
+  },
+  {
+    id: 'm5',
+    name: 'Abyss Eye',
+    series: 'Mega Evolution',
+    printedTotal: 80,
+    total: 100,
+    ptcgoCode: 'M5',
+    releaseDate: '2026/05/22',
+    custom: true,
+  },
+  {
+    id: 'm6',
+    name: 'Storm Emeralda',
+    series: 'Mega Evolution',
+    printedTotal: 80,
+    total: 100,
+    ptcgoCode: 'M6',
+    releaseDate: '2026/07/31',
     custom: true,
   },
 ]
 
-export const JP_SETS = [...scrapedSets, ...MANUAL_SETS]
+// 合并 (scraped 优先, 同 id 时不重复)
+const seen = new Set(scrapedSets.map((s) => s.id))
+export const JP_SETS = [...scrapedSets, ...MANUAL_SETS.filter((s) => !seen.has(s.id))]
 
 // Popular / Home Popular 自动用 JP_SETS 全部, 按发布日期排
 const sortedIds = [...JP_SETS]
   .sort((a, b) => (a.releaseDate < b.releaseDate ? -1 : 1))
   .map((s) => s.id)
 
-// 最新的几个放 home, 其余进 Sets 页
-export const JP_HOME_POPULAR = sortedIds.slice(-8).reverse() // 最新 8 个, 倒序展示
-export const JP_POPULAR_SETS = [...sortedIds].reverse() // 全部, 最新优先
+export const JP_HOME_POPULAR = sortedIds.slice(-8).reverse()
+export const JP_POPULAR_SETS = [...sortedIds].reverse()
 
-// 生成占位卡 (没有 JP cards 真实数据时, 用编号占位)
+// 真实卡片 (TCGdex 来的) > 占位编号 (MANUAL_SETS 用)
 export function getJpCardsForSet(setId) {
+  const real = scrapedCards[setId]
+  if (real && real.length) {
+    return real.map((c) => ({
+      id: c.id,
+      name: c.name,
+      number: c.number,
+      rarity: c.rarity || '',
+      types: c.types || [],
+      supertype: c.supertype || '',
+      subtypes: c.subtypes || [],
+      hp: c.hp || null,
+      img: c.img,
+      imgLarge: c.imgLarge,
+      price: null,
+      setId: c.setId || setId,
+    }))
+  }
+
+  // 占位
   const set = JP_SETS.find((s) => s.id === setId)
   if (!set) return null
   const cards = []
