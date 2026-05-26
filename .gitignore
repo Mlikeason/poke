@@ -25,3 +25,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# stray downloads in repo root
+/*.webp
+/*.jpg
+/*.png
+/*.jpeg
