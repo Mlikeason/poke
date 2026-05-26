@@ -1,26 +1,19 @@
-// 日文 catalog 的 set 数据 (mode='jp' 时使用).
-// 完整 JP 爬虫还没做, 先手工列你拥有的几个. 每加一个就多支持一个 JP set.
+// JP catalog 数据: 从 src/data/jp-sets.json 加载 (由 scripts/fetch-jp-sets.js 生成)
+// 现在 mode='jp' 时 app 会看到这个列表里所有 set
+import scrapedSets from '../data/jp-sets.json'
 
-export const JP_SETS = [
-  {
-    id: 'm1l',
-    name: 'Mega Brave',
-    series: 'Mega Evolution',
-    printedTotal: 56,
-    total: 64,
-    ptcgoCode: 'M1L',
-    releaseDate: '2025/05/02',
-    symbol: '',
-    logo: '',
-    custom: true,
-  },
-]
+export const JP_SETS = scrapedSets
 
-// JP catalog 的 chase / popular / era 配置可以慢慢加, 现在 JP_SETS 才一个
-export const JP_POPULAR_SETS = ['m1l']
-export const JP_HOME_POPULAR = ['m1l']
+// Popular / Home Popular 自动用 JP_SETS 全部, 按发布日期排
+const sortedIds = [...JP_SETS]
+  .sort((a, b) => (a.releaseDate < b.releaseDate ? -1 : 1))
+  .map((s) => s.id)
 
-// 生成占位卡 (没有 JP cards API 数据时)
+// 最新的几个放 home, 其余进 Sets 页
+export const JP_HOME_POPULAR = sortedIds.slice(-8).reverse() // 最新 8 个, 倒序展示
+export const JP_POPULAR_SETS = [...sortedIds].reverse() // 全部, 最新优先
+
+// 生成占位卡 (没有 JP cards 真实数据时, 用编号占位)
 export function getJpCardsForSet(setId) {
   const set = JP_SETS.find((s) => s.id === setId)
   if (!set) return null
