@@ -3,6 +3,7 @@ import { useCollection } from '../hooks.js'
 import { getCardsForSet } from '../lib/api.js'
 import { sortByRarity } from '../lib/sort.js'
 import CardTile from '../components/CardTile.jsx'
+import SharePoster from '../components/SharePoster.jsx'
 import { useT } from '../lib/i18n.js'
 
 function setIdOf(cardId) {
@@ -10,11 +11,14 @@ function setIdOf(cardId) {
   return i < 0 ? cardId : cardId.substring(0, i)
 }
 
+const POKE_RED = '#EE1515'
+
 export default function MyCardsPage() {
   const t = useT()
   const col = useCollection()
   const [bySet, setBySet] = useState({}) // setId -> cards[]
   const [loading, setLoading] = useState(false)
+  const [posterOpen, setPosterOpen] = useState(false)
 
   // 用户拥有的所有 card id, 按所属 set 去重
   const ownedIds = Object.entries(col.cards)
@@ -55,7 +59,19 @@ export default function MyCardsPage() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-medium text-slate-900">{t('mycards.title')}</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-medium text-slate-900">{t('mycards.title')}</h1>
+        {ownedIds.length > 0 && (
+          <button
+            onClick={() => setPosterOpen(true)}
+            className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-white shadow transition hover:brightness-105"
+            style={{ background: POKE_RED }}
+          >
+            <ShareIcon />
+            {t('mycards.sharePoster')}
+          </button>
+        )}
+      </div>
 
       {ownedIds.length === 0 ? (
         <div className="rounded-2xl bg-white/60 p-10 text-center text-sm text-slate-500">{t('mycards.empty')}</div>
@@ -79,6 +95,19 @@ export default function MyCardsPage() {
           ))}
         </div>
       )}
+
+      <SharePoster open={posterOpen} onClose={() => setPosterOpen(false)} />
     </div>
+  )
+}
+
+function ShareIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
+    </svg>
   )
 }

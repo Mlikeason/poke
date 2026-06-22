@@ -6,6 +6,10 @@ import { setCode } from '../lib/setCode.js'
 
 const PIKACHU_YELLOW = '#FFCC00'
 
+function vibrate(ms) {
+  try { if (navigator.vibrate) navigator.vibrate(ms) } catch {}
+}
+
 const RARITY_TONE = {
   Common: 'bg-slate-100 text-slate-600',
   Uncommon: 'bg-emerald-100 text-emerald-700',
@@ -23,12 +27,30 @@ export default function CardTile({ card, entry, customPrice, localImageBase, loc
   const wanted = e.wanted
   const [zoom, setZoom] = useState(false)
   const [editingPrice, setEditingPrice] = useState(false)
+  const [flash, setFlash] = useState(null) // '+' | '-' | null
+  const [numTick, setNumTick] = useState(0) // bumps on change to retrigger num-pop
+  const [starFlash, setStarFlash] = useState(false)
 
   const marketPrice = card.price
   const effectivePrice = customPrice ?? marketPrice ?? DEFAULT_USD
   const priceSource = customPrice != null ? 'custom' : marketPrice != null ? 'market' : 'default'
 
   const rarityCls = RARITY_TONE[card.rarity] || 'bg-slate-100 text-slate-600'
+
+  function onOwnedChange(id, delta) {
+    if (delta > 0) vibrate(10)
+    incOwned(id, delta)
+    setFlash(delta > 0 ? '+' : '-')
+    setNumTick((n) => n + 1)
+    window.setTimeout(() => setFlash(null), 450)
+  }
+
+  function onToggleWanted(id) {
+    vibrate(5)
+    toggleWanted(id)
+    setStarFlash(true)
+    window.setTimeout(() => setStarFlash(false), 400)
+  }
 
   const src = localImageBase ? `${localImageBase}/${card.number}.${localImageExt}` : card.img
   const srcLarge = localImageBase
@@ -37,7 +59,12 @@ export default function CardTile({ card, entry, customPrice, localImageBase, loc
 
   return (
     <div className="group relative">
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-xl">
+      <div
+        className={
+          'overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-xl ' +
+          (flash === '+' ? 'anim-poke' : flash === '-' ? 'anim-unpoke' : '')
+        }
+      >
         <button
           type="button"
           onClick={() => setZoom(true)}
@@ -72,13 +99,14 @@ export default function CardTile({ card, entry, customPrice, localImageBase, loc
               onClick={(ev) => {
                 ev.stopPropagation()
                 ev.preventDefault()
-                toggleWanted(card.id)
+                onToggleWanted(card.id)
               }}
               className={
                 'absolute left-2 top-2 grid h-7 w-7 cursor-pointer place-items-center rounded-full text-sm shadow transition active:scale-90 ' +
                 (wanted
                   ? 'bg-rose-500 text-white'
-                  : 'bg-white/85 text-slate-300 hover:text-rose-500 backdrop-blur')
+                  : 'bg-white/85 text-slate-300 hover:text-rose-500 backdrop-blur') +
+                (starFlash ? ' anim-star' : '')
               }
             >
               ♥
@@ -87,7 +115,11 @@ export default function CardTile({ card, entry, customPrice, localImageBase, loc
 
           {owned && (
             <span
-              className="absolute bottom-2 right-2 grid h-7 min-w-[1.75rem] place-items-center rounded-full px-1.5 text-xs font-semibold text-slate-900 shadow-md"
+              key={numTick}
+              className={
+                'absolute bottom-2 right-2 grid h-7 min-w-[1.75rem] place-items-center rounded-full px-1.5 text-xs font-semibold text-slate-900 shadow-md tabular-nums ' +
+                (numTick > 0 ? 'anim-num-pop' : '')
+              }
               style={{ background: PIKACHU_YELLOW }}
             >
               ×{e.owned}
@@ -166,17 +198,24 @@ export default function CardTile({ card, entry, customPrice, localImageBase, loc
           {!readonly && (
             <div className="flex items-center justify-center gap-1 pt-1">
               <button
-                onClick={() => incOwned(card.id, -1)}
+                onClick={() => onOwnedChange(card.id, -1)}
                 disabled={e.owned <= 0}
                 className="grid h-7 w-7 place-items-center rounded-full border border-slate-200 text-slate-600 transition active:scale-90 enabled:hover:bg-slate-100 disabled:opacity-30"
               >
                 −
               </button>
-              <span className={'min-w-[1.5rem] text-center text-sm font-medium ' + (owned ? 'text-slate-900' : 'text-slate-300')}>
+              <span
+                key={numTick}
+                className={
+                  'min-w-[1.5rem] text-center text-sm font-medium tabular-nums ' +
+                  (owned ? 'text-slate-900' : 'text-slate-300') +
+                  (numTick > 0 ? ' anim-num-pop' : '')
+                }
+              >
                 {e.owned}
               </span>
               <button
-                onClick={() => incOwned(card.id, 1)}
+                onClick={() => onOwnedChange(card.id, 1)}
                 className="grid h-7 w-7 place-items-center rounded-full text-base font-semibold shadow transition active:scale-90 hover:brightness-95"
                 style={{ background: PIKACHU_YELLOW, color: '#1f1d2b' }}
               >

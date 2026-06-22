@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
 import { useT } from '../lib/i18n.js'
 import { useMode } from '../lib/mode.js'
-import SearchBox from './SearchBox.jsx'
+import TabBar from './TabBar.jsx'
 
 export const POKE_RED = '#EE1515'
 export const PIKACHU_YELLOW = '#FFCC00'
@@ -10,57 +9,55 @@ export const PIKACHU_YELLOW = '#FFCC00'
 export default function Header() {
   const t = useT()
   const mode = useMode()
-  const [showSearch, setShowSearch] = useState(false)
 
   return (
     <header
-      className="sticky top-0 z-30 border-b border-black/10"
-      style={{
-        paddingTop: 'env(safe-area-inset-top)',
-        background: PIKACHU_YELLOW,
-      }}
+      className="sticky top-0 z-30 shadow-sm"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
-      {/* 固定高度的单行布局 */}
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
-        <div className="flex shrink-0 items-center gap-2">
-          <Link to="/" className="flex items-center gap-2">
-            <Pokeball />
-            <span
-              className="text-xl tracking-wide text-white"
-              style={{
-                fontFamily: '"Lilita One", system-ui, sans-serif',
-                textShadow: '0 1px 0 rgba(0,0,0,0.15)',
-                WebkitTextStroke: '0.5px rgba(0,0,0,0.25)',
-              }}
+      {/* 第 1 行: 品牌 logo */}
+      <div
+        className="border-b border-black/10"
+        style={{ background: PIKACHU_YELLOW }}
+      >
+        <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
+          <div className="flex shrink-0 items-center gap-2">
+            <Link to="/" className="flex items-center gap-2">
+              <Pokeball />
+              <span
+                className="text-xl tracking-wide text-white"
+                style={{
+                  fontFamily: '"Lilita One", system-ui, sans-serif',
+                  textShadow: '0 1px 0 rgba(0,0,0,0.15)',
+                  WebkitTextStroke: '0.5px rgba(0,0,0,0.25)',
+                }}
+              >
+                {t('app.title')}
+              </span>
+            </Link>
+            <Link
+              to="/settings"
+              title={mode === 'jp' ? 'Japanese catalog (tap to change)' : 'English catalog (tap to change)'}
+              className="rounded-md bg-black/85 px-1.5 py-0.5 font-mono text-[10px] font-medium text-white shadow-sm"
             >
-              {t('app.title')}
-            </span>
-          </Link>
-          <Link
-            to="/settings"
-            title={mode === 'jp' ? 'Japanese catalog (tap to change)' : 'English catalog (tap to change)'}
-            className="rounded-md bg-black/85 px-1.5 py-0.5 font-mono text-[10px] font-medium text-white shadow-sm"
-          >
-            {mode.toUpperCase()}
-          </Link>
-        </div>
-
-        <div className="flex-1" />
-
-        {showSearch ? (
-          <div className="w-[160px]">
-            <SearchBox autoFocus onClose={() => setShowSearch(false)} />
+              {mode.toUpperCase()}
+            </Link>
           </div>
-        ) : (
-          <button
-            onClick={() => setShowSearch(true)}
+
+          <div className="flex-1" />
+
+          <Link
+            to="/search"
             title="Search"
             className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-black/10 bg-white text-slate-700 shadow-sm transition hover:scale-110 hover:text-slate-900"
           >
             <SearchIcon />
-          </button>
-        )}
+          </Link>
+        </div>
       </div>
+
+      {/* 第 2 行: 5 个 tab */}
+      <TabBar />
     </header>
   )
 }

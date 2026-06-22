@@ -37,3 +37,38 @@ button {
 img {
   -webkit-user-drag: none;
 }
+
+/* 卡片 owned +1/+N 时的"爽感"动画: 微放大 + 黄色光晕脉冲 */
+@keyframes poke {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 204, 0, 0.6); }
+  30% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(255, 204, 0, 0.35); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 204, 0, 0); }
+}
+
+/* 卡片 owned -1 时的"回缩"动画 */
+@keyframes unpoke {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.96); filter: brightness(0.92); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+/* owned 数字变化时的 pop 动画 */
+@keyframes num-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+/* wanted 星星点亮时的旋转 + 放大 */
+@keyframes star-spark {
+  0% { transform: scale(1) rotate(0); }
+  50% { transform: scale(1.25) rotate(-12deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+.anim-poke { animation: poke 0.45s ease-out; }
+.anim-unpoke { animation: unpoke 0.3s ease-out; }
+.anim-num-pop { animation: num-pop 0.35s ease-out; }
+.anim-star { animation: star-spark 0.4s ease-out; }
+
+.tabular-nums { font-variant-numeric: tabular-nums; }

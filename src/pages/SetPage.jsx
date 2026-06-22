@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation, useParams } from 'react-router-dom'
 import { useSets, useCollection, useImageManifest } from '../hooks.js'
 import { useMode } from '../lib/mode.js'
 import { getCardsForSet } from '../lib/api.js'
@@ -15,6 +15,7 @@ import { useT } from '../lib/i18n.js'
 export default function SetPage() {
   const t = useT()
   const { setId } = useParams()
+  const { hash } = useLocation()
   const sets = useSets()
   const col = useCollection()
   const manifest = useImageManifest()
@@ -25,11 +26,59 @@ export default function SetPage() {
   const [sort, setSort] = useState('number') // number | rarity
   const [query, setQuery] = useState('')
   const [hasPack, setHasPack] = useState(true) // 乐观默认, PackArt 探测后回调
+  const [autoFallback, setAutoFallback] = useState(false) // owned=0 自动切到 all 时显示提示
+  const [dismissedHint, setDismissedHint] = useState(false) // 用户关闭提示后不再打扰
+  const scrolledToHash = useRef(false)
 
   // 进 wanted tab 时默认按稀有度排, 其他默认按编号. 用户改了之后保持
   useEffect(() => {
     setSort(filter === 'wanted' ? 'rarity' : 'number')
   }, [filter])
+
+  // owned=0 且用户没手动切过 tab → 自动 fallback 到 all 视图, 避免空白页
+  useEffect(() => {
+    if (filter === 'owned' && cards && owned === 0 && !autoFallback) {
+      setFilter('all')
+      setAutoFallback(true)
+      setDismissedHint(false)
+    }
+  }, [cards, owned, filter, autoFallback])
+
+  // 用户手动切 owned tab: 关闭提示, 标记 autoFallback 防止再自动跳走
+  function onFilterChange(k) {
+    setFilter(k)
+    if (k === 'owned') {
+      setAutoFallback(true)
+      setDismissedHint(true)
+    }
+  }
+
+  // 来自全局搜索 #card-<id> → 自动切到 all + 滚到那张卡
+  useEffect(() => {
+    if (scrolledToHash.current || !cards || !hash.startsWith('#card-')) return
+    const id = hash.substring(6)
+    if (!cards.some((c) => c.id === id)) return
+    setFilter('all')
+    setAutoFallback(true)
+    setDismissedHint(true)
+    // 等一帧让网格渲染完再滚
+    requestAnimationFrame(() => {
+      const el = document.getElementById('card-' + id)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        el.classList.add('ring-2', 'ring-amber-400', 'ring-offset-2')
+        window.setTimeout(() => el.classList.remove('ring-2', 'ring-amber-400', 'ring-offset-2'), 2500)
+      }
+    })
+    scrolledToHash.current = true
+  }, [cards, hash])
+
+  // setId 变化时重置 fallback 状态 + 重置 hash scroll
+  useEffect(() => {
+    setAutoFallback(false)
+    setDismissedHint(false)
+    scrolledToHash.current = false
+  }, [setId])
 
   useEffect(() => {
     setCards(null)
@@ -126,7 +175,7 @@ export default function SetPage() {
           ].map(([k, label]) => (
             <button
               key={k}
-              onClick={() => setFilter(k)}
+              onClick={() => onFilterChange(k)}
               className={
                 'rounded-full px-3 py-1 text-sm transition ' +
                 (filter === k ? 'bg-slate-900 text-white shadow' : 'text-slate-600 hover:text-slate-900')
@@ -170,19 +219,31 @@ export default function SetPage() {
       )}
       {cards && (
         <>
+          {autoFallback && !dismissedHint && (
+            <div className="flex items-center justify-between gap-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800 ring-1 ring-amber-200">
+              <span>{t('set.emptyFallbackHint')}</span>
+              <button
+                onClick={() => setDismissedHint(true)}
+                className="shrink-0 rounded-full px-2 py-0.5 text-xs text-amber-700 hover:bg-amber-100"
+              >
+                {t('set.dismissHint')}
+              </button>
+            </div>
+          )}
           {filtered.length === 0 ? (
             <div className="rounded-2xl bg-white/60 p-10 text-center text-sm text-slate-500">{t('set.empty')}</div>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {filtered.map((c) => (
-                <CardTile
-                  key={c.id}
-                  card={c}
-                  entry={col.cards[c.id]}
-                  customPrice={col.customPrices[c.id]}
-                  localImageBase={localImageBase}
-                  localImageExt={localImageExt}
-                />
+                <div key={c.id} id={'card-' + c.id} className="scroll-mt-32">
+                  <CardTile
+                    card={c}
+                    entry={col.cards[c.id]}
+                    customPrice={col.customPrices[c.id]}
+                    localImageBase={localImageBase}
+                    localImageExt={localImageExt}
+                  />
+                </div>
               ))}
             </div>
           )}

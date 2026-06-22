@@ -9,6 +9,7 @@ import Settings from './pages/Settings.jsx'
 import PopularPage from './pages/PopularPage.jsx'
 import MyCardsPage from './pages/MyCardsPage.jsx'
 import ErasPage from './pages/ErasPage.jsx'
+import SearchPage from './pages/SearchPage.jsx'
 import './index.css'
 
 createRoot(document.getElementById('root')).render(
@@ -23,6 +24,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="popular" element={<PopularPage />} />
           <Route path="my-cards" element={<MyCardsPage />} />
           <Route path="eras" element={<ErasPage />} />
+          <Route path="search" element={<SearchPage />} />
         </Route>
       </Routes>
     </HashRouter>

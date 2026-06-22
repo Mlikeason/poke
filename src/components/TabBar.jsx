@@ -21,13 +21,7 @@ export default function TabBar() {
   ]
 
   return (
-    <nav
-      className="fixed inset-x-0 bottom-0 z-40"
-      style={{
-        background: POKE_RED,
-        paddingBottom: 'env(safe-area-inset-bottom)',
-      }}
-    >
+    <nav className="border-b border-black/5 bg-white/95 backdrop-blur">
       <ul className="mx-auto flex max-w-6xl items-stretch">
         {tabs.map((tab) => {
           const active = isActive(pathname, tab.path)
@@ -37,14 +31,20 @@ export default function TabBar() {
               <Link
                 to={tab.path}
                 className={
-                  'flex flex-col items-center justify-center gap-px px-1 py-1.5 transition ' +
-                  (active ? 'text-white' : 'text-white/65 hover:text-white')
+                  'relative flex flex-col items-center justify-center gap-0.5 px-1 py-2 transition ' +
+                  (active ? 'text-[#EE1515]' : 'text-slate-500 hover:text-slate-800')
                 }
               >
                 <Icon active={active} />
-                <span className={'text-[9px] leading-tight ' + (active ? 'font-medium' : '')}>
+                <span className={'text-[9px] leading-tight ' + (active ? 'font-semibold' : 'font-medium')}>
                   {tab.label}
                 </span>
+                {active && (
+                  <span
+                    className="absolute inset-x-3 bottom-0 h-[2px] rounded-full"
+                    style={{ background: POKE_RED }}
+                  />
+                )}
               </Link>
             </li>
           )
