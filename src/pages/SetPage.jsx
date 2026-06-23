@@ -35,15 +35,6 @@ export default function SetPage() {
     setSort(filter === 'wanted' ? 'rarity' : 'number')
   }, [filter])
 
-  // owned=0 且用户没手动切过 tab → 自动 fallback 到 all 视图, 避免空白页
-  useEffect(() => {
-    if (filter === 'owned' && cards && owned === 0 && !autoFallback) {
-      setFilter('all')
-      setAutoFallback(true)
-      setDismissedHint(false)
-    }
-  }, [cards, owned, filter, autoFallback])
-
   // 用户手动切 owned tab: 关闭提示, 标记 autoFallback 防止再自动跳走
   function onFilterChange(k) {
     setFilter(k)
@@ -52,26 +43,6 @@ export default function SetPage() {
       setDismissedHint(true)
     }
   }
-
-  // 来自全局搜索 #card-<id> → 自动切到 all + 滚到那张卡
-  useEffect(() => {
-    if (scrolledToHash.current || !cards || !hash.startsWith('#card-')) return
-    const id = hash.substring(6)
-    if (!cards.some((c) => c.id === id)) return
-    setFilter('all')
-    setAutoFallback(true)
-    setDismissedHint(true)
-    // 等一帧让网格渲染完再滚
-    requestAnimationFrame(() => {
-      const el = document.getElementById('card-' + id)
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        el.classList.add('ring-2', 'ring-amber-400', 'ring-offset-2')
-        window.setTimeout(() => el.classList.remove('ring-2', 'ring-amber-400', 'ring-offset-2'), 2500)
-      }
-    })
-    scrolledToHash.current = true
-  }, [cards, hash])
 
   // setId 变化时重置 fallback 状态 + 重置 hash scroll
   useEffect(() => {
@@ -119,6 +90,34 @@ export default function SetPage() {
 
   const owned = set ? ownedInSet(col.cards, set.id) : 0
   const total = set?.total || cards?.length || 0
+
+  // owned=0 且用户没手动切过 tab → 自动 fallback 到 all 视图, 避免空白页
+  useEffect(() => {
+    if (filter === 'owned' && cards && owned === 0 && !autoFallback) {
+      setFilter('all')
+      setAutoFallback(true)
+      setDismissedHint(false)
+    }
+  }, [cards, owned, filter, autoFallback])
+
+  // 来自全局搜索 #card-<id> → 自动切到 all + 滚到那张卡
+  useEffect(() => {
+    if (scrolledToHash.current || !cards || !hash.startsWith('#card-')) return
+    const id = hash.substring(6)
+    if (!cards.some((c) => c.id === id)) return
+    setFilter('all')
+    setAutoFallback(true)
+    setDismissedHint(true)
+    requestAnimationFrame(() => {
+      const el = document.getElementById('card-' + id)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        el.classList.add('ring-2', 'ring-amber-400', 'ring-offset-2')
+        window.setTimeout(() => el.classList.remove('ring-2', 'ring-amber-400', 'ring-offset-2'), 2500)
+      }
+    })
+    scrolledToHash.current = true
+  }, [cards, hash])
   // EN: /cards/<setId>/<n>.png; JP (from Bulbapedia scrape): /cards/jp/<setId>/<n>.jpg
   const localImageBase = manifest[setId]
     ? (mode === 'jp'
