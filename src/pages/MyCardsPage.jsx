@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useCollection } from '../hooks.js'
 import { getCardsForSet } from '../lib/api.js'
-import { sortByRarity } from '../lib/sort.js'
+import { priceFor } from '../lib/collection.js'
 import CardTile from '../components/CardTile.jsx'
 import SharePoster from '../components/SharePoster.jsx'
 import { useT } from '../lib/i18n.js'
@@ -46,7 +46,7 @@ export default function MyCardsPage() {
     }
   }, [neededSetIds.join('|')])
 
-  // 把 ownedIds 映射到具体 card 对象, 按稀有度排
+  // 把 ownedIds 映射到具体 card 对象, 按价值降序排 (贵的在前)
   const cards = useMemo(() => {
     const flat = []
     for (const id of ownedIds) {
@@ -54,7 +54,13 @@ export default function MyCardsPage() {
       const c = bySet[sid]?.find((x) => x.id === id)
       if (c) flat.push(c)
     }
-    return sortByRarity(flat)
+    return flat.sort((a, b) => {
+      const pa = priceFor(a.id) ?? 0
+      const pb = priceFor(b.id) ?? 0
+      if (pb !== pa) return pb - pa
+      // 同价按 rarity 兜底 (避免不稳定)
+      return (a.rarity || '').localeCompare(b.rarity || '')
+    })
   }, [ownedIds.join('|'), bySet])
 
   return (

@@ -17,7 +17,12 @@ export default function EraPage() {
 
   const mine = sets
     .filter((s) => eraForSeries(s.series) === eraId)
-    .sort((a, b) => (a.releaseDate < b.releaseDate ? 1 : -1))
+    .map((s) => ({ set: s, owned: ownedInSet(col.cards, s.id) }))
+    .sort((a, b) => {
+      // 拥有数量降序; 同数量按发行日期降序 (新的在前)
+      if (b.owned !== a.owned) return b.owned - a.owned
+      return a.set.releaseDate < b.set.releaseDate ? 1 : -1
+    })
 
   const gradient = `linear-gradient(135deg, ${era.accent.from}, ${era.accent.to})`
 
@@ -33,8 +38,8 @@ export default function EraPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        {mine.map((s) => (
-          <SetCard key={s.id} set={s} owned={ownedInSet(col.cards, s.id)} gradient={gradient} />
+        {mine.map(({ set: s, owned }) => (
+          <SetCard key={s.id} set={s} owned={owned} gradient={gradient} />
         ))}
       </div>
     </div>
