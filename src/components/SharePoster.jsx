@@ -8,9 +8,9 @@ import { useT } from '../lib/i18n.js'
 const POKE_RED = '#EE1515'
 const PIKACHU_YELLOW = '#FFCC00'
 
-// 海报实际渲染尺寸 (像素). 4:5 比例, 适合 IG / 微信朋友圈.
+// 海报实际渲染尺寸 (像素). 9:16 比例, 手机屏幕大小.
 const POSTER_W = 1080
-const POSTER_H = 1440
+const POSTER_H = 1920
 
 export default function SharePoster({ open, onClose }) {
   const t = useT()
