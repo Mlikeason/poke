@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useT } from '../lib/i18n.js'
 import { getCardsForSet } from '../lib/api.js'
+import { recognizeCard, getAiKey } from '../lib/visionApi.js'
 
 const POKE_RED = '#EE1515'
 
@@ -16,6 +17,7 @@ export default function ScanPage() {
   const [rawText, setRawText] = useState('')
   const [matches, setMatches] = useState([])
   const [err, setErr] = useState(null)
+  const [useAi, setUseAi] = useState(!!getAiKey())
 
   useEffect(() => () => stopStream(), [])
 
@@ -59,7 +61,32 @@ export default function ScanPage() {
     setStage('scanning')
     setMatches([])
     setRawText('')
+    setErr(null)
 
+    // Try AI vision first if key is configured
+    const aiKey = getAiKey()
+    if (aiKey) {
+      setUseAi(true)
+      try {
+        const result = await recognizeCard(dataUrl)
+        setRawText(result.raw || '')
+        if (result.setCode && result.number) {
+          const found = await lookupCard({ setId: result.setCode, number: result.number })
+          setMatches(found ? [found] : [])
+        } else {
+          setMatches([])
+          if (result.reason) setErr(`AI: ${result.reason}`)
+        }
+        setStage('results')
+        return
+      } catch (e) {
+        console.error('AI vision failed, falling back to OCR', e)
+        // Fall through to Tesseract
+      }
+    }
+
+    // Fallback to Tesseract OCR
+    setUseAi(false)
     try {
       const Tesseract = await import('tesseract.js')
       const { data } = await Tesseract.recognize(dataUrl, 'eng', {})
@@ -120,6 +147,9 @@ export default function ScanPage() {
               <div className="flex flex-col items-center gap-3 text-white">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                 <span className="text-sm">{t('scan.processing')}</span>
+                <span className="text-xs text-white/60">
+                  {useAi ? t('scan.aiLabel') : t('scan.ocrLabel')}
+                </span>
               </div>
             </div>
           )}

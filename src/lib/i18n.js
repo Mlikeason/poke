@@ -140,6 +140,17 @@ const M = {
   'settings.imagesHelpAll': 'Or download all 173 sets in one go (large, takes a while):',
   'settings.packs': 'Pack wrapper images',
   'settings.packsHelp': 'To show a booster pack image alongside the set logo, drop a JPG/PNG/WEBP file into public/packs/ named after the set id, e.g. public/packs/sv8.jpg for Surging Sparks. The app picks it up automatically — no manifest needed.',
+  'settings.ai': 'AI card recognition',
+  'settings.aiHelp': 'Qwen vision model can identify cards from photos much more accurately than OCR. Get a free API key from dashscope.console.aliyun.com.',
+  'settings.aiKey': 'API Key',
+  'settings.aiHost': 'API Host',
+  'settings.aiSaved': 'Saved',
+  'settings.aiTestOk': 'Connection OK',
+  'settings.aiTestFail': 'Connection failed: {msg}',
+  'settings.aiTesting': 'Testing…',
+  'settings.aiTest': 'Test connection',
+  'scan.aiLabel': 'Using AI vision',
+  'scan.ocrLabel': 'Using local OCR',
 }
 
 export function useT() {

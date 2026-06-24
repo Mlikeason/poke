@@ -1,13 +1,19 @@
+import { useState } from 'react'
 import { useT } from '../lib/i18n.js'
 import { useMode, setMode } from '../lib/mode.js'
 import { useCurrency, setCurrency } from '../lib/currency.js'
 import { exportJson, importJson, reset } from '../lib/collection.js'
 import { clearCardCache } from '../lib/api.js'
+import { getAiKey, setAiKey, getAiHost, setAiHost, testAiConnection } from '../lib/visionApi.js'
 
 export default function Settings() {
   const t = useT()
   const mode = useMode()
   const [currency] = useCurrency()
+  const [aiKey, setAiKeyState] = useState(getAiKey())
+  const [aiHost, setAiHostState] = useState(getAiHost())
+  const [aiTestStatus, setAiTestStatus] = useState(null) // null | 'testing' | 'ok' | 'fail'
+  const [aiTestMsg, setAiTestMsg] = useState('')
 
   const handleExport = () => {
     const blob = new Blob([exportJson()], { type: 'application/json' })
@@ -91,6 +97,65 @@ export default function Settings() {
               {label}
             </button>
           ))}
+        </div>
+      </Section>
+
+      {/* AI Vision */}
+      <Section title={t('settings.ai')}>
+        <p className="text-sm text-slate-600">{t('settings.aiHelp')}</p>
+        <div className="space-y-3">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">{t('settings.aiHost')}</label>
+            <input
+              type="text"
+              value={aiHost}
+              onChange={(e) => {
+                setAiHostState(e.target.value)
+                setAiHost(e.target.value)
+              }}
+              placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-mono focus:border-slate-400 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">{t('settings.aiKey')}</label>
+            <input
+              type="password"
+              value={aiKey}
+              onChange={(e) => {
+                setAiKeyState(e.target.value)
+                setAiKey(e.target.value)
+              }}
+              placeholder="sk-..."
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-mono focus:border-slate-400 focus:outline-none"
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={async () => {
+                setAiTestStatus('testing')
+                setAiTestMsg('')
+                try {
+                  await testAiConnection()
+                  setAiTestStatus('ok')
+                  setAiTestMsg(t('settings.aiTestOk'))
+                } catch (e) {
+                  setAiTestStatus('fail')
+                  setAiTestMsg(t('settings.aiTestFail', { msg: e.message }))
+                }
+              }}
+              disabled={!aiKey || aiTestStatus === 'testing'}
+              className={btnSecondary}
+            >
+              {aiTestStatus === 'testing' ? t('settings.aiTesting') : t('settings.aiTest')}
+            </button>
+            {aiTestStatus === 'ok' && (
+              <span className="text-sm text-emerald-600">✓ {aiTestMsg}</span>
+            )}
+            {aiTestStatus === 'fail' && (
+              <span className="text-sm text-rose-600">✗ {aiTestMsg}</span>
+            )}
+          </div>
         </div>
       </Section>
 
