@@ -5,7 +5,7 @@ import { statsByEra, uniqueOwnedCount, estimatedValue, ownedInSet, totalCardsInS
 import { HOME_POPULAR, POPULAR_SETS } from '../lib/popular.js'
 import { JP_HOME_POPULAR, JP_POPULAR_SETS } from '../lib/customSets.js'
 import { useMode } from '../lib/mode.js'
-import { formatSgd } from '../lib/currency.js'
+import { formatPrice } from '../lib/currency.js'
 import EraCard from '../components/EraCard.jsx'
 import PopularSetCard from '../components/PopularSetCard.jsx'
 import ChevronRight from '../components/ChevronRight.jsx'
@@ -126,7 +126,7 @@ function MyCollectionCard({ t, owned, valueUsd, wanted }) {
         {/* 3 等分: 已有 / 价值 / 想要 */}
         <div className="relative mt-4 grid grid-cols-3 gap-3">
           <Stat label={t('home.cardsWord')} value={owned.toLocaleString()} />
-          <Stat label={t('home.stat.value')} value={formatSgd(valueUsd)} />
+          <Stat label={t('home.stat.value')} value={formatPrice(valueUsd)} />
           <Stat label={t('home.stat.wanted')} value={wanted.toLocaleString()} />
         </div>
       </div>

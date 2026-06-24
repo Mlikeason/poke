@@ -10,6 +10,8 @@ import PopularPage from './pages/PopularPage.jsx'
 import MyCardsPage from './pages/MyCardsPage.jsx'
 import ErasPage from './pages/ErasPage.jsx'
 import SearchPage from './pages/SearchPage.jsx'
+import CardDetailPage from './pages/CardDetailPage.jsx'
+import ScanPage from './pages/ScanPage.jsx'
 import './index.css'
 
 createRoot(document.getElementById('root')).render(
@@ -25,6 +27,8 @@ createRoot(document.getElementById('root')).render(
           <Route path="my-cards" element={<MyCardsPage />} />
           <Route path="eras" element={<ErasPage />} />
           <Route path="search" element={<SearchPage />} />
+          <Route path="card/:cardId" element={<CardDetailPage />} />
+          <Route path="scan" element={<ScanPage />} />
         </Route>
       </Routes>
     </HashRouter>

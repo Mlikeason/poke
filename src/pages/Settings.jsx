@@ -1,11 +1,13 @@
 import { useT } from '../lib/i18n.js'
 import { useMode, setMode } from '../lib/mode.js'
+import { useCurrency, setCurrency } from '../lib/currency.js'
 import { exportJson, importJson, reset } from '../lib/collection.js'
 import { clearCardCache } from '../lib/api.js'
 
 export default function Settings() {
   const t = useT()
   const mode = useMode()
+  const [currency] = useCurrency()
 
   const handleExport = () => {
     const blob = new Blob([exportJson()], { type: 'application/json' })
@@ -58,6 +60,30 @@ export default function Settings() {
               className={
                 'flex-1 rounded-xl border px-4 py-3 text-sm transition ' +
                 (mode === code
+                  ? 'border-slate-900 bg-slate-900 text-white'
+                  : 'border-slate-200 bg-white text-slate-700 hover:border-slate-400')
+              }
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      {/* Currency */}
+      <Section title={t('settings.currency')}>
+        <p className="text-sm text-slate-600">{t('settings.currencyHelp')}</p>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          {[
+            ['usd', t('settings.currencyUsd')],
+            ['sgd', t('settings.currencySgd')],
+          ].map(([code, label]) => (
+            <button
+              key={code}
+              onClick={() => setCurrency(code)}
+              className={
+                'flex-1 rounded-xl border px-4 py-3 text-sm transition ' +
+                (currency === code
                   ? 'border-slate-900 bg-slate-900 text-white'
                   : 'border-slate-200 bg-white text-slate-700 hover:border-slate-400')
               }

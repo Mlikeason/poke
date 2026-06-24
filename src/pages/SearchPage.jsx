@@ -106,7 +106,7 @@ export default function SearchPage() {
             {results.cards.map((c) => (
               <li key={c.id}>
                 <Link
-                  to={`/set/${c.setId}#card-${c.id}`}
+                  to={`/card/${c.id}`}
                   className="flex items-center gap-3 px-3 py-2 transition hover:bg-slate-50"
                 >
                   <div className="grid h-12 w-9 shrink-0 place-items-center overflow-hidden rounded bg-slate-100">

@@ -97,3 +97,18 @@ export function clearCardCache(setId) {
     }
   }
 }
+
+// 遍历所有已缓存的 set, 找某张卡 (按 id). 返回 card 对象 或 null
+export function findCachedCard(cardId) {
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i)
+    if (!k || !k.startsWith(CACHE_PREFIX)) continue
+    try {
+      const parsed = JSON.parse(localStorage.getItem(k))
+      if (!parsed?.cards) continue
+      const card = parsed.cards.find((c) => c.id === cardId)
+      if (card) return card
+    } catch {}
+  }
+  return null
+}

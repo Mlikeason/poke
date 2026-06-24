@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { incOwned, toggleWanted, setCustomPrice } from '../lib/collection.js'
 import { useT } from '../lib/i18n.js'
-import { formatSgd, DEFAULT_USD } from '../lib/currency.js'
+import { formatPrice, DEFAULT_USD } from '../lib/currency.js'
 import { setCode } from '../lib/setCode.js'
 
 const PIKACHU_YELLOW = '#FFCC00'
@@ -152,7 +153,7 @@ export default function CardTile({ card, entry, customPrice, localImageBase, loc
           <div className="text-[11px]">
             {readonly ? (
               <div className="flex items-center justify-between text-slate-600">
-                <span>{formatSgd(effectivePrice)}</span>
+                <span>{formatPrice(effectivePrice)}</span>
                 {priceSource === 'market' && <span className="text-[9px] text-slate-400">{t('card.market')}</span>}
                 {priceSource === 'custom' && <span className="text-[9px] text-emerald-500">★</span>}
               </div>
@@ -186,7 +187,7 @@ export default function CardTile({ card, entry, customPrice, localImageBase, loc
                 }
                 className="flex w-full items-center justify-between rounded text-left text-slate-500 hover:text-slate-900"
               >
-                <span>{formatSgd(effectivePrice)}</span>
+                <span>{formatPrice(effectivePrice)}</span>
                 {priceSource === 'market' && <span className="text-[9px] text-slate-400">{t('card.market')}</span>}
                 {priceSource === 'custom' && <span className="text-[9px] text-emerald-500">★</span>}
                 {priceSource === 'default' && <span className="text-[9px] text-slate-300">·</span>}
@@ -204,23 +205,18 @@ export default function CardTile({ card, entry, customPrice, localImageBase, loc
               >
                 −
               </button>
-              <span
-                key={numTick}
-                className={
-                  'min-w-[1.5rem] text-center text-sm font-medium tabular-nums ' +
-                  (owned ? 'text-slate-900' : 'text-slate-300') +
-                  (numTick > 0 ? ' anim-num-pop' : '')
-                }
-              >
+              <span className={'min-w-[1.5rem] text-center text-sm font-medium tabular-nums ' + (owned ? 'text-slate-900' : 'text-slate-300')}>
                 {e.owned}
               </span>
-              <button
+              <Link
+                to={`/card/${card.id}`}
                 onClick={() => onOwnedChange(card.id, 1)}
-                className="grid h-7 w-7 place-items-center rounded-full text-base font-semibold shadow transition active:scale-90 hover:brightness-95"
-                style={{ background: PIKACHU_YELLOW, color: '#1f1d2b' }}
+                className="grid h-9 w-9 place-items-center rounded-full text-lg font-bold text-slate-900 shadow-md transition active:scale-90 hover:brightness-95 hover:shadow-lg"
+                style={{ background: PIKACHU_YELLOW }}
+                title={t('card.addOne')}
               >
                 +
-              </button>
+              </Link>
             </div>
           )}
         </div>

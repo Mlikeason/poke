@@ -2,7 +2,7 @@ import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 import { toPng } from 'html-to-image'
 import { useSets, useCollection } from '../hooks.js'
 import { buildPosterData } from '../lib/posterData.js'
-import { formatSgd } from '../lib/currency.js'
+import { formatPrice } from '../lib/currency.js'
 import { useT } from '../lib/i18n.js'
 
 const POKE_RED = '#EE1515'
@@ -333,7 +333,7 @@ const PosterCanvas = forwardRef(function PosterCanvas({ data, t, onImgLoad }, re
         >
           <Stat label={t('home.cardsWord')} value={data.owned.toLocaleString()} />
           <Stat label={t('tab.sets')} value={data.setsCollected.toLocaleString()} />
-          <Stat label={t('home.stat.value')} value={formatSgd(data.valueUsd)} />
+          <Stat label={t('home.stat.value')} value={formatPrice(data.valueUsd)} />
         </div>
         <div
           style={{

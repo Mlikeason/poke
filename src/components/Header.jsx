@@ -47,6 +47,14 @@ export default function Header() {
           <div className="flex-1" />
 
           <Link
+            to="/scan"
+            title={t('scan.title')}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-black/10 bg-white text-slate-700 shadow-sm transition hover:scale-110 hover:text-slate-900"
+          >
+            <ScanIcon />
+          </Link>
+
+          <Link
             to="/search"
             title="Search"
             className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-black/10 bg-white text-slate-700 shadow-sm transition hover:scale-110 hover:text-slate-900"
@@ -78,6 +86,18 @@ function SearchIcon() {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="11" r="7" />
       <path d="m21 21-4.3-4.3" />
+    </svg>
+  )
+}
+
+function ScanIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+      <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+      <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+      <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+      <path d="M7 12h10" />
     </svg>
   )
 }
