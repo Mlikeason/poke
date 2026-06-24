@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSets } from '../hooks.js'
 import { searchAll } from '../lib/globalSearch.js'
@@ -7,12 +7,47 @@ import { useT } from '../lib/i18n.js'
 
 const POKE_RED = '#EE1515'
 const PIKACHU_YELLOW = '#FFCC00'
+const HISTORY_KEY = 'poke.search.history'
+const MAX_HISTORY = 8
+
+function readHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY)
+    if (!raw) return []
+    const arr = JSON.parse(raw)
+    return Array.isArray(arr) ? arr.slice(0, MAX_HISTORY) : []
+  } catch {
+    return []
+  }
+}
+
+function writeHistory(list) {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, MAX_HISTORY)))
+  } catch {}
+}
+
+function addHistory(term) {
+  const t = term.trim()
+  if (t.length < 2) return
+  const prev = readHistory().filter((x) => x !== t)
+  writeHistory([t, ...prev])
+}
+
+function removeHistory(term) {
+  writeHistory(readHistory().filter((x) => x !== term))
+}
+
+function clearHistory() {
+  try { localStorage.removeItem(HISTORY_KEY) } catch {}
+}
 
 export default function SearchPage() {
   const t = useT()
   const sets = useSets()
   const [q, setQ] = useState('')
   const [debounced, setDebounced] = useState('')
+  const [history, setHistory] = useState(readHistory)
   const inputRef = useRef(null)
 
   useEffect(() => {
@@ -29,7 +64,34 @@ export default function SearchPage() {
     return searchAll(debounced, sets)
   }, [debounced, sets])
 
+  // Save to history when there are meaningful results
+  const lastSavedRef = useRef('')
+  useEffect(() => {
+    if (debounced.trim().length < 2) return
+    if (results.sets.length === 0 && results.cards.length === 0) return
+    if (debounced === lastSavedRef.current) return
+    lastSavedRef.current = debounced
+    addHistory(debounced)
+    setHistory(readHistory())
+  }, [debounced, results])
+
+  const pickHistory = useCallback((term) => {
+    setQ(term)
+    inputRef.current?.focus()
+  }, [])
+
+  const deleteHistory = useCallback((term) => {
+    removeHistory(term)
+    setHistory(readHistory())
+  }, [])
+
+  const wipeHistory = useCallback(() => {
+    clearHistory()
+    setHistory([])
+  }, [])
+
   const isEmpty = debounced.trim().length > 0 && results.sets.length === 0 && results.cards.length === 0
+  const showHistory = !q.trim() && history.length > 0
 
   return (
     <div className="space-y-5">
@@ -56,8 +118,46 @@ export default function SearchPage() {
         </div>
       </div>
 
-      {!debounced.trim() && (
+      {!debounced.trim() && !showHistory && (
         <p className="rounded-2xl bg-white/60 p-4 text-sm text-slate-500">{t('search.cardHelp')}</p>
+      )}
+
+      {showHistory && (
+        <section>
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-xs font-medium uppercase tracking-wider text-slate-500">
+              {t('search.recent')}
+            </h2>
+            <button
+              onClick={wipeHistory}
+              className="text-[10px] text-slate-400 hover:text-slate-700"
+            >
+              {t('search.clearHistory')}
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {history.map((term) => (
+              <div
+                key={term}
+                className="group flex items-center gap-0.5 rounded-full bg-white ring-1 ring-slate-200"
+              >
+                <button
+                  onClick={() => pickHistory(term)}
+                  className="rounded-l-full px-3 py-1 text-sm text-slate-700 transition hover:bg-slate-50"
+                >
+                  {term}
+                </button>
+                <button
+                  onClick={() => deleteHistory(term)}
+                  className="rounded-r-full px-2 py-1 text-xs text-slate-300 transition hover:text-slate-600"
+                  aria-label="Remove"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
       {isEmpty && (

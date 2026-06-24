@@ -66,6 +66,8 @@ const M = {
   'search.noResultsQuery': 'No matches for "{q}".',
   'search.cardHelp': 'Only cards from sets you have opened are searchable.',
   'search.tryLabel': 'Try',
+  'search.recent': 'Recent',
+  'search.clearHistory': 'Clear',
 
   'mycards.title': 'All My Cards',
   'mycards.empty': 'No cards yet — open a set and tap + on a card.',
