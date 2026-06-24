@@ -114,7 +114,7 @@ export default function Settings() {
                 setAiHostState(e.target.value)
                 setAiHost(e.target.value)
               }}
-              placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1"
+              placeholder="https://api.z.ai/api/paas/v4"
               className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-mono focus:border-slate-400 focus:outline-none"
             />
           </div>

@@ -3,8 +3,8 @@ const KEY_AI_KEY = 'poke.ai.key'
 const KEY_AI_HOST = 'poke.ai.host'
 const KEY_AI_MODEL = 'poke.ai.model'
 
-const DEFAULT_HOST = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
-const DEFAULT_MODEL = 'qwen3.5-omni-flash'
+const DEFAULT_HOST = 'https://api.z.ai/api/paas/v4'
+const DEFAULT_MODEL = 'glm-4.6v-flash'
 
 export function getAiKey() {
   try { return localStorage.getItem(KEY_AI_KEY) || '' } catch { return '' }
@@ -13,13 +13,33 @@ export function setAiKey(key) {
   try { localStorage.setItem(KEY_AI_KEY, key.trim()) } catch {}
 }
 export function getAiHost() {
-  try { return localStorage.getItem(KEY_AI_HOST) || DEFAULT_HOST } catch { return DEFAULT_HOST }
+  try {
+    const stored = localStorage.getItem(KEY_AI_HOST)
+    if (!stored) return DEFAULT_HOST
+    if (stored.includes('dashscope.aliyuncs.com')) {
+      localStorage.setItem(KEY_AI_HOST, DEFAULT_HOST)
+      return DEFAULT_HOST
+    }
+    return stored
+  } catch {
+    return DEFAULT_HOST
+  }
 }
 export function setAiHost(host) {
   try { localStorage.setItem(KEY_AI_HOST, host.trim()) } catch {}
 }
 export function getAiModel() {
-  try { return localStorage.getItem(KEY_AI_MODEL) || DEFAULT_MODEL } catch { return DEFAULT_MODEL }
+  try {
+    const stored = localStorage.getItem(KEY_AI_MODEL)
+    if (!stored) return DEFAULT_MODEL
+    if (stored.includes('qwen')) {
+      localStorage.setItem(KEY_AI_MODEL, DEFAULT_MODEL)
+      return DEFAULT_MODEL
+    }
+    return stored
+  } catch {
+    return DEFAULT_MODEL
+  }
 }
 export function setAiModel(model) {
   try { localStorage.setItem(KEY_AI_MODEL, model.trim()) } catch {}
