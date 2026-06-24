@@ -1,33 +1,28 @@
-// Qwen Vision API integration for card recognition
+// AI Vision API integration for card recognition
 const KEY_AI_KEY = 'poke.ai.key'
 const KEY_AI_HOST = 'poke.ai.host'
+const KEY_AI_MODEL = 'poke.ai.model'
+
+const DEFAULT_HOST = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+const DEFAULT_MODEL = 'qwen3.5-omni-flash'
 
 export function getAiKey() {
-  try {
-    return localStorage.getItem(KEY_AI_KEY) || ''
-  } catch {
-    return ''
-  }
+  try { return localStorage.getItem(KEY_AI_KEY) || '' } catch { return '' }
 }
-
 export function setAiKey(key) {
-  try {
-    localStorage.setItem(KEY_AI_KEY, key.trim())
-  } catch {}
+  try { localStorage.setItem(KEY_AI_KEY, key.trim()) } catch {}
 }
-
 export function getAiHost() {
-  try {
-    return localStorage.getItem(KEY_AI_HOST) || 'https://dashscope.aliyuncs.com/compatible-mode/v1'
-  } catch {
-    return 'https://dashscope.aliyuncs.com/compatible-mode/v1'
-  }
+  try { return localStorage.getItem(KEY_AI_HOST) || DEFAULT_HOST } catch { return DEFAULT_HOST }
 }
-
 export function setAiHost(host) {
-  try {
-    localStorage.setItem(KEY_AI_HOST, host.trim())
-  } catch {}
+  try { localStorage.setItem(KEY_AI_HOST, host.trim()) } catch {}
+}
+export function getAiModel() {
+  try { return localStorage.getItem(KEY_AI_MODEL) || DEFAULT_MODEL } catch { return DEFAULT_MODEL }
+}
+export function setAiModel(model) {
+  try { localStorage.setItem(KEY_AI_MODEL, model.trim()) } catch {}
 }
 
 // Send image to Qwen vision model, extract set code and number
@@ -52,7 +47,7 @@ If you cannot read it clearly, reply:
 {"setCode": null, "number": null, "reason": "brief explanation"}`
 
   const body = {
-    model: 'qwen3.5-omni-flash',
+    model: getAiModel(),
     messages: [
       {
         role: 'user',
@@ -113,7 +108,7 @@ export async function testAiConnection() {
   console.log('API Key prefix:', key.trim().substring(0, 10) + '...')
 
   const body = {
-    model: 'qwen3.5-omni-flash',
+    model: getAiModel(),
     messages: [{ role: 'user', content: 'Hi' }],
     max_tokens: 10,
   }

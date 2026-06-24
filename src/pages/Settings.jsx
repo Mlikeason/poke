@@ -4,7 +4,7 @@ import { useMode, setMode } from '../lib/mode.js'
 import { useCurrency, setCurrency } from '../lib/currency.js'
 import { exportJson, importJson, reset } from '../lib/collection.js'
 import { clearCardCache } from '../lib/api.js'
-import { getAiKey, setAiKey, getAiHost, setAiHost, testAiConnection } from '../lib/visionApi.js'
+import { getAiKey, setAiKey, getAiHost, setAiHost, getAiModel, setAiModel, testAiConnection } from '../lib/visionApi.js'
 
 export default function Settings() {
   const t = useT()
@@ -12,6 +12,7 @@ export default function Settings() {
   const [currency] = useCurrency()
   const [aiKey, setAiKeyState] = useState(getAiKey())
   const [aiHost, setAiHostState] = useState(getAiHost())
+  const [aiModel, setAiModelState] = useState(getAiModel())
   const [aiTestStatus, setAiTestStatus] = useState(null) // null | 'testing' | 'ok' | 'fail'
   const [aiTestMsg, setAiTestMsg] = useState('')
 
@@ -114,6 +115,19 @@ export default function Settings() {
                 setAiHost(e.target.value)
               }}
               placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-mono focus:border-slate-400 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">{t('settings.aiModel')}</label>
+            <input
+              type="text"
+              value={aiModel}
+              onChange={(e) => {
+                setAiModelState(e.target.value)
+                setAiModel(e.target.value)
+              }}
+              placeholder="qwen-vl-max"
               className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-mono focus:border-slate-400 focus:outline-none"
             />
           </div>

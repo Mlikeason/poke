@@ -144,6 +144,7 @@ const M = {
   'settings.aiHelp': 'Qwen vision model can identify cards from photos much more accurately than OCR. Get a free API key from dashscope.console.aliyun.com.',
   'settings.aiKey': 'API Key',
   'settings.aiHost': 'API Host',
+  'settings.aiModel': 'Model name',
   'settings.aiSaved': 'Saved',
   'settings.aiTestOk': 'Connection OK',
   'settings.aiTestFail': 'Connection failed: {msg}',
