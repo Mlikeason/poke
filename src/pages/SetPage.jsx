@@ -55,13 +55,13 @@ export default function SetPage() {
     setCards(null)
     setErr(null)
     let cancel = false
-    getCardsForSet(setId)
+    getCardsForSet(setId, mode)
       .then((c) => !cancel && setCards(c))
       .catch((e) => !cancel && setErr(e.message))
     return () => {
       cancel = true
     }
-  }, [setId])
+  }, [setId, mode])
 
   const set = sets?.find((s) => s.id === setId)
   const era = set ? eraById(eraForSeries(set.series)) : null

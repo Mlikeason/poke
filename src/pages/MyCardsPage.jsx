@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useCollection } from '../hooks.js'
+import { useMode } from '../lib/mode.js'
 import { getCardsForSet } from '../lib/api.js'
 import { priceFor } from '../lib/collection.js'
 import CardTile from '../components/CardTile.jsx'
@@ -16,6 +17,7 @@ const POKE_RED = '#EE1515'
 export default function MyCardsPage() {
   const t = useT()
   const col = useCollection()
+  const mode = useMode()
   const [bySet, setBySet] = useState({}) // setId -> cards[]
   const [loading, setLoading] = useState(false)
   const [posterOpen, setPosterOpen] = useState(false)
@@ -35,7 +37,7 @@ export default function MyCardsPage() {
     if (missing.length === 0) return
     setLoading(true)
     Promise.all(
-      missing.map((sid) => getCardsForSet(sid).then((cards) => [sid, cards]).catch(() => [sid, []])),
+      missing.map((sid) => getCardsForSet(sid, mode).then((cards) => [sid, cards]).catch(() => [sid, []])),
     ).then((entries) => {
       if (cancel) return
       setBySet((prev) => ({ ...prev, ...Object.fromEntries(entries) }))
@@ -44,7 +46,7 @@ export default function MyCardsPage() {
     return () => {
       cancel = true
     }
-  }, [neededSetIds.join('|')])
+  }, [neededSetIds.join('|'), mode])
 
   // 把 ownedIds 映射到具体 card 对象, 按价值降序排 (贵的在前)
   const cards = useMemo(() => {

@@ -1,7 +1,8 @@
 // 按需拉某 set 的所有卡片, 带 localStorage 缓存
-// JP catalog 走占位逻辑, EN 走 pokemontcg.io API.
+// EN mode 走 pokemontcg.io API (即使 ID 与某个 JP set 撞了也走 EN)
+// JP mode 走本地 jp-cards.json
 import { mergePrices } from './collection.js'
-import { getJpCardsForSet, isJpSet } from './customSets.js'
+import { getJpCardsForSet } from './customSets.js'
 
 const CACHE_PREFIX = 'poke.cards.v1.'
 
@@ -24,9 +25,10 @@ function pickPrice(c) {
   return null
 }
 
-export async function getCardsForSet(setId) {
-  // JP set: 直接返回占位
-  if (isJpSet(setId)) return getJpCardsForSet(setId)
+// mode: 'en' | 'jp' (传入, 避免 module 内部依赖 getMode() 状态)
+// EN mode 下即使 setId 与某个 JP set 撞名, 也强制走 pokemontcg.io API
+export async function getCardsForSet(setId, mode) {
+  if (mode === 'jp') return getJpCardsForSet(setId)
 
   const key = CACHE_PREFIX + setId
   try {

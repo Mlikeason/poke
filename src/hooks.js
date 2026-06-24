@@ -41,6 +41,14 @@ export function useBootPrices() {
   useEffect(() => {
     if (bootPricesLoaded) return
     bootPricesLoaded = true
+
+    // 一次性清理: sv9/sv10 的 JP/EN ID 撞名 bug 之前把日文卡缓存到 EN 用户的 localStorage
+    // 删掉这些 key, 让用户重新拉到正确的 EN 卡
+    try {
+      const badKeys = ['poke.cards.v1.sv9', 'poke.cards.v1.sv10']
+      for (const k of badKeys) localStorage.removeItem(k)
+    } catch {}
+
     fetch(import.meta.env.BASE_URL + 'prices.json')
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
