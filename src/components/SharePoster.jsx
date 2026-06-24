@@ -183,6 +183,8 @@ const PosterCanvas = forwardRef(function PosterCanvas({ data, t, onImgLoad }, re
         color: '#1f1d2b',
         position: 'relative',
         overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       {/* 角落 Pokeball 水印 */}
@@ -198,13 +200,13 @@ const PosterCanvas = forwardRef(function PosterCanvas({ data, t, onImgLoad }, re
       </svg>
 
       {/* 顶部红黄品牌条 */}
-      <div style={{ display: 'flex', height: 28 }}>
+      <div style={{ display: 'flex', height: 28, flexShrink: 0 }}>
         <span style={{ flex: 2, background: PIKACHU_YELLOW }} />
         <span style={{ flex: 1, background: POKE_RED }} />
       </div>
 
-      {/* 标题区 */}
-      <div style={{ padding: '40px 60px 28px', position: 'relative' }}>
+      {/* 标题区 — 加大顶部留白 */}
+      <div style={{ padding: '80px 60px 40px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
           <span
             style={{
@@ -237,8 +239,8 @@ const PosterCanvas = forwardRef(function PosterCanvas({ data, t, onImgLoad }, re
         </div>
       </div>
 
-      {/* 卡片网格: 4 列 × 4 行 = 16 张 */}
-      <div style={{ padding: '0 60px 28px' }}>
+      {/* 卡片网格: 4 列 × 4 行 = 16 张, flex 占满剩余空间 */}
+      <div style={{ padding: '0 60px', flex: 1, display: 'flex', alignItems: 'center' }}>
         {data.topCards.length > 0 ? (
           <div
             style={{
@@ -246,6 +248,7 @@ const PosterCanvas = forwardRef(function PosterCanvas({ data, t, onImgLoad }, re
               gridTemplateColumns: 'repeat(4, 1fr)',
               gridTemplateRows: 'repeat(4, 1fr)',
               gap: 16,
+              width: '100%',
             }}
           >
             {Array.from({ length: 16 }).map((_, i) => {
@@ -303,6 +306,7 @@ const PosterCanvas = forwardRef(function PosterCanvas({ data, t, onImgLoad }, re
         ) : (
           <div
             style={{
+              width: '100%',
               padding: 60,
               textAlign: 'center',
               background: '#f8fafc',
@@ -316,32 +320,30 @@ const PosterCanvas = forwardRef(function PosterCanvas({ data, t, onImgLoad }, re
         )}
       </div>
 
-      {/* 统计区 */}
-      <div
-        style={{
-          margin: '0 60px',
-          padding: '32px 0',
-          borderTop: '2px solid #e2e8f0',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 20,
-        }}
-      >
-        <Stat label={t('home.cardsWord')} value={data.owned.toLocaleString()} />
-        <Stat label={t('home.stat.value')} value={formatSgd(data.valueUsd)} />
-        <Stat label={t('home.stat.wanted')} value={data.wanted.toLocaleString()} />
-      </div>
-
-      {/* 底部日期 + 来源 */}
-      <div
-        style={{
-          position: 'absolute', left: 60, right: 60, bottom: 40,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          fontSize: 18, color: '#94a3b8', letterSpacing: '0.1em',
-        }}
-      >
-        <span>{data.date}</span>
-        <span style={{ fontWeight: 600, color: POKE_RED }}>{t('mycards.posterSource')}</span>
+      {/* 底部: 统计 + 日期, 紧凑排在一起 */}
+      <div style={{ padding: '32px 60px 60px', flexShrink: 0 }}>
+        <div
+          style={{
+            padding: '28px 0',
+            borderTop: '2px solid #e2e8f0',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: 20,
+          }}
+        >
+          <Stat label={t('home.cardsWord')} value={data.owned.toLocaleString()} />
+          <Stat label={t('home.stat.value')} value={formatSgd(data.valueUsd)} />
+        </div>
+        <div
+          style={{
+            marginTop: 24,
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            fontSize: 18, color: '#94a3b8', letterSpacing: '0.1em',
+          }}
+        >
+          <span>{data.date}</span>
+          <span style={{ fontWeight: 600, color: POKE_RED }}>{t('mycards.posterSource')}</span>
+        </div>
       </div>
     </div>
   )
