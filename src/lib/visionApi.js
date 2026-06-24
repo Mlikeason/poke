@@ -53,13 +53,13 @@ export async function recognizeCard(imageDataUrl) {
   const host = getAiHost()
   const url = `${host}/chat/completions`
 
-  const prompt = `This is a close-up photo of a Pokemon trading card corner. Find the card number — it looks like "042/165" or "247/191" where the number before the slash is the card number.
+  const prompt = `This is a close-up photo of a Pokemon trading card corner. Find the card number — it looks like "042/165" or "247/191" where the number before the slash is the card number and after is the total.
 
 Reply with ONLY a JSON object (no other text):
-{"number": "42"}
+{"number": "42", "total": "165"}
 
-Strip leading zeros. If you cannot read the number, reply:
-{"number": null, "reason": "brief explanation"}`
+Strip leading zeros. If you cannot read it, reply:
+{"number": null, "total": null, "reason": "brief explanation"}`
 
   const body = {
     model: getAiModel(),
@@ -105,6 +105,7 @@ Strip leading zeros. If you cannot read the number, reply:
   const parsed = JSON.parse(match[0])
   return {
     number: parsed.number ? String(parseInt(parsed.number, 10)) : null,
+    total: parsed.total ? String(parseInt(parsed.total, 10)) : null,
     raw: text,
     reason: parsed.reason,
   }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useT } from '../lib/i18n.js'
-import { findCardsByNumber } from '../lib/api.js'
+import { findCardsByNumberAndTotal } from '../lib/api.js'
 import { recognizeCard, getAiKey } from '../lib/visionApi.js'
 import { useSets } from '../hooks.js'
 
@@ -79,8 +79,8 @@ export default function ScanPage() {
       try {
         const result = await recognizeCard(dataUrl)
         setRawText(result.raw || '')
-        if (result.number) {
-          const found = findCardsByNumber(result.number)
+        if (result.number && result.total) {
+          const found = findCardsByNumberAndTotal(result.number, result.total, sets)
           setMatches(found.map(({ card, setId }) => ({ ...card, setId })))
         } else {
           setMatches([])
@@ -101,9 +101,9 @@ export default function ScanPage() {
       const { data } = await Tesseract.recognize(dataUrl, 'eng', {})
       const text = data.text || ''
       setRawText(text)
-      const number = parseNumber(text)
-      if (number) {
-        const found = findCardsByNumber(number)
+      const parsed = parseNumberAndTotal(text)
+      if (parsed) {
+        const found = findCardsByNumberAndTotal(parsed.number, parsed.total, sets)
         setMatches(found.map(({ card, setId }) => ({ ...card, setId })))
       }
       setStage('results')
@@ -283,14 +283,17 @@ function CameraIcon() {
   )
 }
 
-// Extract card number from OCR text — look for "XXX/YYY" pattern, return the left number
-function parseNumber(text) {
+// Extract card number and total from OCR text — look for "XXX/YYY" pattern
+function parseNumberAndTotal(text) {
   if (!text) return null
   const clean = text.replace(/\s+/g, ' ').trim()
-  // Pattern: "042/165" or "247 / 191" — return the number before the slash
-  const m = clean.match(/(\d{1,3})\s*\/\s*\d{1,3}/)
+  // Pattern: "042/165" or "247 / 191" — return both numbers
+  const m = clean.match(/(\d{1,3})\s*\/\s*(\d{1,3})/)
   if (m) {
-    return String(parseInt(m[1], 10))
+    return {
+      number: String(parseInt(m[1], 10)),
+      total: String(parseInt(m[2], 10)),
+    }
   }
   return null
 }

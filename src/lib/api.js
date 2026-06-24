@@ -135,3 +135,29 @@ export function findCardsByNumber(number) {
   }
   return results
 }
+
+// 用 number + total 精确匹配: total 是 set 的总卡数, number 是卡在这个 set 里的编号.
+// sets: 来自 useSets() 的 set 列表 (有 total 字段).
+// 返回 [{ card, setId }, ...]
+export function findCardsByNumberAndTotal(number, total, sets) {
+  const targetNum = String(parseInt(number, 10))
+  const targetTotal = String(parseInt(total, 10))
+  const matchingSets = (sets || []).filter((s) => String(s.total) === targetTotal)
+  if (matchingSets.length === 0) return []
+
+  const results = []
+  for (const set of matchingSets) {
+    const key = CACHE_PREFIX + set.id
+    try {
+      const parsed = JSON.parse(localStorage.getItem(key))
+      if (!parsed?.cards) continue
+      for (const card of parsed.cards) {
+        const cardNum = String(parseInt(card.number, 10))
+        if (cardNum === targetNum) {
+          results.push({ card, setId: set.id })
+        }
+      }
+    } catch {}
+  }
+  return results
+}
