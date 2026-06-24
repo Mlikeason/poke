@@ -239,8 +239,8 @@ const PosterCanvas = forwardRef(function PosterCanvas({ data, t, onImgLoad }, re
         </div>
       </div>
 
-      {/* 卡片网格: 4 列 × 4 行 = 16 张, flex 占满剩余空间 */}
-      <div style={{ padding: '0 60px', flex: 1, display: 'flex', alignItems: 'center' }}>
+      {/* 卡片网格: 4 列 × 4 行 = 16 张, 顶部对齐 */}
+      <div style={{ padding: '0 60px', flex: 1 }}>
         {data.topCards.length > 0 ? (
           <div
             style={{
@@ -327,11 +327,12 @@ const PosterCanvas = forwardRef(function PosterCanvas({ data, t, onImgLoad }, re
             padding: '28px 0',
             borderTop: '2px solid #e2e8f0',
             display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
+            gridTemplateColumns: 'repeat(3, 1fr)',
             gap: 20,
           }}
         >
           <Stat label={t('home.cardsWord')} value={data.owned.toLocaleString()} />
+          <Stat label={t('tab.sets')} value={data.setsCollected.toLocaleString()} />
           <Stat label={t('home.stat.value')} value={formatSgd(data.valueUsd)} />
         </div>
         <div

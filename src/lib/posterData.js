@@ -1,5 +1,5 @@
 // 为分享海报聚合数据: 总 owned / 总价值 / wanted / top 6 高价 owned 卡 (带图).
-import { uniqueOwnedCount, wantedCount, estimatedValue } from './stats.js'
+import { uniqueOwnedCount, estimatedValue } from './stats.js'
 import { priceFor } from './collection.js'
 
 function setIdOf(cardId) {
@@ -26,7 +26,11 @@ export function buildPosterData(col, sets) {
   const cards = col?.cards || {}
   const owned = uniqueOwnedCount(cards)
   const valueUsd = estimatedValue(cards, col?.customPrices || {}, col?.prices || {})
-  const wanted = wantedCount(cards)
+
+  // 用户拥有至少 1 张卡的 set 数量
+  const setsCollected = new Set(
+    Object.keys(cards).filter((id) => (cards[id].owned || 0) > 0).map(setIdOf),
+  ).size
 
   // top 16 高价 owned 卡 (按 priceFor 降序) — 海报 4×4 网格
   const ownedIds = Object.entries(cards)
@@ -55,5 +59,5 @@ export function buildPosterData(col, sets) {
   const now = new Date()
   const date = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`
 
-  return { owned, valueUsd, wanted, topCards, date }
+  return { owned, valueUsd, setsCollected, topCards, date }
 }
