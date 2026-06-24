@@ -112,3 +112,26 @@ export function findCachedCard(cardId) {
   }
   return null
 }
+
+// 遍历所有已缓存的 set, 找所有匹配某个 number 的卡 (按 number 字符串比较, 去前导零).
+// 返回 [{ card, setId }, ...]
+export function findCardsByNumber(number) {
+  const results = []
+  const targetNum = String(parseInt(number, 10))
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i)
+    if (!k || !k.startsWith(CACHE_PREFIX)) continue
+    const setId = k.slice(CACHE_PREFIX.length)
+    try {
+      const parsed = JSON.parse(localStorage.getItem(k))
+      if (!parsed?.cards) continue
+      for (const card of parsed.cards) {
+        const cardNum = String(parseInt(card.number, 10))
+        if (cardNum === targetNum) {
+          results.push({ card, setId })
+        }
+      }
+    } catch {}
+  }
+  return results
+}

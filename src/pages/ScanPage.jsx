@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useT } from '../lib/i18n.js'
-import { getCardsForSet } from '../lib/api.js'
+import { findCardsByNumber } from '../lib/api.js'
 import { recognizeCard, getAiKey } from '../lib/visionApi.js'
+import { useSets } from '../hooks.js'
 
 const POKE_RED = '#EE1515'
 
 export default function ScanPage() {
   const t = useT()
   const navigate = useNavigate()
+  const sets = useSets()
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
@@ -51,14 +53,13 @@ export default function ScanPage() {
     const video = videoRef.current
     const canvas = canvasRef.current
     if (!video || !canvas) return
-    // Crop to the guide region (bottom-left 60% width, bottom 40% height of the visible video)
-    // The guide overlay covers the bottom-left where Pokemon card codes are
+    // Crop to the guide region (bottom-left of card where set code + number is)
     const vw = video.videoWidth
     const vh = video.videoHeight
-    const cropX = 0
-    const cropY = Math.floor(vh * 0.6)
-    const cropW = Math.floor(vw * 0.6)
-    const cropH = Math.floor(vh * 0.4)
+    const cropX = Math.floor(vw * 0.15)
+    const cropY = Math.floor(vh * 0.75)
+    const cropW = Math.floor(vw * 0.45)
+    const cropH = Math.floor(vh * 0.2)
     canvas.width = cropW
     canvas.height = cropH
     const ctx = canvas.getContext('2d')
@@ -78,9 +79,9 @@ export default function ScanPage() {
       try {
         const result = await recognizeCard(dataUrl)
         setRawText(result.raw || '')
-        if (result.setCode && result.number) {
-          const found = await lookupCard({ setId: result.setCode, number: result.number })
-          setMatches(found ? [found] : [])
+        if (result.number) {
+          const found = findCardsByNumber(result.number)
+          setMatches(found.map(({ card, setId }) => ({ ...card, setId })))
         } else {
           setMatches([])
           if (result.reason) setErr(`AI: ${result.reason}`)
@@ -100,10 +101,10 @@ export default function ScanPage() {
       const { data } = await Tesseract.recognize(dataUrl, 'eng', {})
       const text = data.text || ''
       setRawText(text)
-      const parsed = parseCardCode(text)
-      if (parsed) {
-        const found = await lookupCard(parsed)
-        setMatches(found ? [found] : [])
+      const number = parseNumber(text)
+      if (number) {
+        const found = findCardsByNumber(number)
+        setMatches(found.map(({ card, setId }) => ({ ...card, setId })))
       }
       setStage('results')
     } catch (e) {
@@ -164,8 +165,14 @@ export default function ScanPage() {
           {/* Scan overlay — bottom-left guide for card code */}
           {stage === 'live' && (
             <div className="pointer-events-none absolute inset-0">
-              <div className="absolute bottom-0 left-0 h-[40%] w-[60%] rounded-tr-2xl border-r-2 border-t-2 border-amber-400 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
-              <div className="absolute bottom-[42%] left-2 rounded-md bg-black/60 px-2 py-1 text-[10px] text-amber-300">
+              <div
+                className="absolute rounded-lg border-2 border-amber-400 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]"
+                style={{ left: '15%', bottom: '5%', width: '45%', height: '20%' }}
+              />
+              <div
+                className="absolute rounded-md bg-black/60 px-2 py-1 text-[10px] text-amber-300"
+                style={{ left: '15%', bottom: '27%' }}
+              >
                 {t('scan.alignHint')}
               </div>
             </div>
@@ -218,30 +225,33 @@ export default function ScanPage() {
                 {t('scan.results')}
               </h2>
               <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200">
-                {matches.map((c) => (
-                  <li key={c.id}>
-                    <button
-                      onClick={() => goToCard(c)}
-                      className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition hover:bg-slate-50"
-                    >
-                      <div className="grid h-14 w-10 shrink-0 place-items-center overflow-hidden rounded bg-slate-100">
-                        {c.img ? (
-                          <img src={c.img} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          <span className="font-mono text-[9px] text-slate-400">#{c.number}</span>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-medium text-slate-900">{c.name}</div>
-                        <div className="text-[10px] text-slate-400">
-                          #{c.number} · {c.setId}
-                          {c.rarity && ` · ${c.rarity}`}
+                {matches.map((c) => {
+                  const set = sets?.find((s) => s.id === c.setId)
+                  return (
+                    <li key={c.id}>
+                      <button
+                        onClick={() => goToCard(c)}
+                        className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition hover:bg-slate-50"
+                      >
+                        <div className="grid h-14 w-10 shrink-0 place-items-center overflow-hidden rounded bg-slate-100">
+                          {c.img ? (
+                            <img src={c.img} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <span className="font-mono text-[9px] text-slate-400">#{c.number}</span>
+                          )}
                         </div>
-                      </div>
-                      <span className="text-slate-300">→</span>
-                    </button>
-                  </li>
-                ))}
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-medium text-slate-900">{c.name}</div>
+                          <div className="truncate text-[10px] text-slate-400">
+                            #{c.number} · {set?.name || c.setId}
+                            {c.rarity && ` · ${c.rarity}`}
+                          </div>
+                        </div>
+                        <span className="text-slate-300">→</span>
+                      </button>
+                    </li>
+                  )
+                })}
               </ul>
             </div>
           )}
@@ -273,49 +283,14 @@ function CameraIcon() {
   )
 }
 
-// Parse OCR output looking for Pokemon card set code + number.
-// Examples: "sv10 042/165", "base1 4", "EX 7 14/114", "SVP 042"
-function parseCardCode(text) {
+// Extract card number from OCR text — look for "XXX/YYY" pattern, return the left number
+function parseNumber(text) {
   if (!text) return null
   const clean = text.replace(/\s+/g, ' ').trim()
-  // Pattern 1: "sv10 042/165" or "sv10 42"
-  let m = clean.match(/\b([a-z]{1,4}\d{1,2})\s*(\d{1,3})(?:\s*\/\s*(\d{1,3}))?\b/i)
+  // Pattern: "042/165" or "247 / 191" — return the number before the slash
+  const m = clean.match(/(\d{1,3})\s*\/\s*\d{1,3}/)
   if (m) {
-    return { setId: m[1].toLowerCase(), number: String(parseInt(m[2], 10)) }
-  }
-  // Pattern 2: "EX7 14" or "ex 7 14"
-  m = clean.match(/\b([a-z]{1,4})\s*(\d{1,2})\s+(\d{1,3})\b/i)
-  if (m) {
-    return { setId: (m[1] + m[2]).toLowerCase(), number: String(parseInt(m[3], 10)) }
+    return String(parseInt(m[1], 10))
   }
   return null
-}
-
-async function lookupCard({ setId, number }) {
-  try {
-    const url = `https://api.pokemontcg.io/v2/cards?q=set.id:${encodeURIComponent(setId)}+number:${encodeURIComponent(number)}&pageSize=5`
-    const res = await fetch(url)
-    if (!res.ok) return null
-    const json = await res.json()
-    if (!json.data || json.data.length === 0) {
-      // fallback: try loading set from cache and match locally
-      try {
-        const cards = await getCardsForSet(setId, 'en')
-        return cards.find((c) => String(parseInt(c.number, 10)) === number) || null
-      } catch {
-        return null
-      }
-    }
-    const c = json.data[0]
-    return {
-      id: c.id,
-      name: c.name,
-      number: c.number,
-      rarity: c.rarity || '',
-      img: c.images?.small,
-      setId,
-    }
-  } catch {
-    return null
-  }
 }
