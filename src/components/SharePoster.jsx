@@ -237,18 +237,18 @@ const PosterCanvas = forwardRef(function PosterCanvas({ data, t, onImgLoad }, re
         </div>
       </div>
 
-      {/* 卡片网格: 6 列 × 4 行 = 24 张 */}
+      {/* 卡片网格: 4 列 × 4 行 = 16 张 */}
       <div style={{ padding: '0 60px 28px' }}>
         {data.topCards.length > 0 ? (
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(6, 1fr)',
+              gridTemplateColumns: 'repeat(4, 1fr)',
               gridTemplateRows: 'repeat(4, 1fr)',
               gap: 16,
             }}
           >
-            {Array.from({ length: 24 }).map((_, i) => {
+            {Array.from({ length: 16 }).map((_, i) => {
               const c = data.topCards[i]
               return (
                 <div

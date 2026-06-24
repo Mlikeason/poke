@@ -28,12 +28,12 @@ export function buildPosterData(col, sets) {
   const valueUsd = estimatedValue(cards, col?.customPrices || {}, col?.prices || {})
   const wanted = wantedCount(cards)
 
-  // top 24 高价 owned 卡 (按 priceFor 降序) — 海报 6×4 网格
+  // top 16 高价 owned 卡 (按 priceFor 降序) — 海报 4×4 网格
   const ownedIds = Object.entries(cards)
     .filter(([_, v]) => (v.owned || 0) > 0)
     .map(([id, v]) => ({ id, price: priceFor(id) ?? 0, owned: v.owned || 0 }))
     .sort((a, b) => b.price - a.price)
-    .slice(0, 24)
+    .slice(0, 16)
 
   const topCards = ownedIds
     .map(({ id, price, owned: n }) => {
