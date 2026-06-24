@@ -7,12 +7,19 @@ import { useSets } from '../hooks.js'
 
 const POKE_RED = '#EE1515'
 
+// Guide box position in the display container (percentage)
+const BOX_LEFT_PCT = 0.03
+const BOX_BOTTOM_PCT = 0.03
+const BOX_WIDTH_PCT = 0.28
+const BOX_HEIGHT_PCT = 0.08
+
 export default function ScanPage() {
   const t = useT()
   const navigate = useNavigate()
   const sets = useSets()
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
+  const containerRef = useRef(null)
   const streamRef = useRef(null)
   const [stage, setStage] = useState('idle') // idle | live | captured | scanning | results
   const [capturedDataUrl, setCapturedDataUrl] = useState(null)
@@ -52,14 +59,35 @@ export default function ScanPage() {
   async function capture() {
     const video = videoRef.current
     const canvas = canvasRef.current
-    if (!video || !canvas) return
-    // Crop to the guide region (bottom-left of card where set code + number is)
+    const container = containerRef.current
+    if (!video || !canvas || !container) return
+
+    // Map guide box from display coordinates to raw video coordinates.
+    // The video uses object-cover, so the browser may crop parts of the video frame.
     const vw = video.videoWidth
     const vh = video.videoHeight
-    const cropX = Math.floor(vw * 0.15)
-    const cropY = Math.floor(vh * 0.75)
-    const cropW = Math.floor(vw * 0.45)
-    const cropH = Math.floor(vh * 0.2)
+    const cw = container.clientWidth
+    const ch = container.clientHeight
+
+    // object-cover math
+    const scale = Math.max(cw / vw, ch / vh)
+    const displayedW = vw * scale
+    const displayedH = vh * scale
+    const offsetX = (displayedW - cw) / 2
+    const offsetY = (displayedH - ch) / 2
+
+    // Guide box in display coordinates
+    const boxLeft = cw * BOX_LEFT_PCT
+    const boxTop = ch * (1 - BOX_BOTTOM_PCT - BOX_HEIGHT_PCT)
+    const boxW = cw * BOX_WIDTH_PCT
+    const boxH = ch * BOX_HEIGHT_PCT
+
+    // Convert to video coordinates
+    const cropX = Math.max(0, Math.floor((boxLeft + offsetX) / scale))
+    const cropY = Math.max(0, Math.floor((boxTop + offsetY) / scale))
+    const cropW = Math.min(vw - cropX, Math.floor(boxW / scale))
+    const cropH = Math.min(vh - cropY, Math.floor(boxH / scale))
+
     canvas.width = cropW
     canvas.height = cropH
     const ctx = canvas.getContext('2d')
@@ -133,18 +161,18 @@ export default function ScanPage() {
 
       {/* Camera viewport — portrait, matching phone camera */}
       <div className="overflow-hidden rounded-3xl bg-slate-900 shadow-lg ring-1 ring-slate-200">
-        <div className="relative mx-auto aspect-[3/4] w-full max-w-sm">
+        <div ref={containerRef} className="relative mx-auto aspect-[3/4] w-full max-w-sm">
           <video
             ref={videoRef}
             playsInline
             muted
-            className={'h-full w-full object-cover ' + (stage === 'live' ? '' : 'hidden')}
+            className={'absolute inset-0 h-full w-full object-cover ' + (stage === 'live' ? '' : 'hidden')}
           />
           {capturedDataUrl && stage !== 'live' && (
-            <img src={capturedDataUrl} alt="captured" className="h-full w-full object-contain bg-slate-900" />
+            <img src={capturedDataUrl} alt="captured" className="absolute inset-0 h-full w-full object-contain bg-slate-900" />
           )}
           {stage === 'idle' && !capturedDataUrl && (
-            <div className="grid h-full w-full place-items-center p-6 text-center">
+            <div className="absolute inset-0 grid place-items-center p-6 text-center">
               <div className="space-y-3 text-white/70">
                 <CameraIcon />
                 <p className="text-sm">{t('scan.help')}</p>
@@ -162,16 +190,24 @@ export default function ScanPage() {
               </div>
             </div>
           )}
-          {/* Scan overlay — bottom-left guide for card code */}
+          {/* Scan overlay — guide box matching the crop region exactly */}
           {stage === 'live' && (
             <div className="pointer-events-none absolute inset-0">
               <div
-                className="absolute rounded-lg border-2 border-amber-400 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]"
-                style={{ left: '15%', bottom: '5%', width: '45%', height: '20%' }}
+                className="absolute rounded border-2 border-amber-400 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]"
+                style={{
+                  left: `${BOX_LEFT_PCT * 100}%`,
+                  bottom: `${BOX_BOTTOM_PCT * 100}%`,
+                  width: `${BOX_WIDTH_PCT * 100}%`,
+                  height: `${BOX_HEIGHT_PCT * 100}%`,
+                }}
               />
               <div
-                className="absolute rounded-md bg-black/60 px-2 py-1 text-[10px] text-amber-300"
-                style={{ left: '15%', bottom: '27%' }}
+                className="absolute rounded bg-black/60 px-1.5 py-0.5 text-[9px] text-amber-300"
+                style={{
+                  left: `${BOX_LEFT_PCT * 100}%`,
+                  bottom: `${(BOX_BOTTOM_PCT + BOX_HEIGHT_PCT) * 100 + 2}%`,
+                }}
               >
                 {t('scan.alignHint')}
               </div>
