@@ -25,7 +25,7 @@ export default function ScanPage() {
     setErr(null)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+        video: { facingMode: 'environment', width: { ideal: 1080 }, height: { ideal: 1920 } },
         audio: false,
       })
       streamRef.current = stream
@@ -51,10 +51,18 @@ export default function ScanPage() {
     const video = videoRef.current
     const canvas = canvasRef.current
     if (!video || !canvas) return
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
+    // Crop to the guide region (bottom-left 60% width, bottom 40% height of the visible video)
+    // The guide overlay covers the bottom-left where Pokemon card codes are
+    const vw = video.videoWidth
+    const vh = video.videoHeight
+    const cropX = 0
+    const cropY = Math.floor(vh * 0.6)
+    const cropW = Math.floor(vw * 0.6)
+    const cropH = Math.floor(vh * 0.4)
+    canvas.width = cropW
+    canvas.height = cropH
     const ctx = canvas.getContext('2d')
-    ctx.drawImage(video, 0, 0)
+    ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
     const dataUrl = canvas.toDataURL('image/jpeg', 0.9)
     setCapturedDataUrl(dataUrl)
     stopStream()
@@ -122,9 +130,9 @@ export default function ScanPage() {
       <h1 className="text-2xl font-medium text-slate-900">{t('scan.title')}</h1>
       <p className="text-sm text-slate-600">{t('scan.instructions')}</p>
 
-      {/* Camera viewport */}
+      {/* Camera viewport — portrait, matching phone camera */}
       <div className="overflow-hidden rounded-3xl bg-slate-900 shadow-lg ring-1 ring-slate-200">
-        <div className="relative aspect-video w-full">
+        <div className="relative mx-auto aspect-[3/4] w-full max-w-sm">
           <video
             ref={videoRef}
             playsInline
@@ -132,7 +140,7 @@ export default function ScanPage() {
             className={'h-full w-full object-cover ' + (stage === 'live' ? '' : 'hidden')}
           />
           {capturedDataUrl && stage !== 'live' && (
-            <img src={capturedDataUrl} alt="captured" className="h-full w-full object-contain" />
+            <img src={capturedDataUrl} alt="captured" className="h-full w-full object-contain bg-slate-900" />
           )}
           {stage === 'idle' && !capturedDataUrl && (
             <div className="grid h-full w-full place-items-center p-6 text-center">
@@ -153,10 +161,13 @@ export default function ScanPage() {
               </div>
             </div>
           )}
-          {/* Scan overlay */}
+          {/* Scan overlay — bottom-left guide for card code */}
           {stage === 'live' && (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="h-1/3 w-4/5 rounded-2xl border-2 border-white/60 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
+            <div className="pointer-events-none absolute inset-0">
+              <div className="absolute bottom-0 left-0 h-[40%] w-[60%] rounded-tr-2xl border-r-2 border-t-2 border-amber-400 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
+              <div className="absolute bottom-[42%] left-2 rounded-md bg-black/60 px-2 py-1 text-[10px] text-amber-300">
+                {t('scan.alignHint')}
+              </div>
             </div>
           )}
         </div>

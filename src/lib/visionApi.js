@@ -53,12 +53,13 @@ export async function recognizeCard(imageDataUrl) {
   const host = getAiHost()
   const url = `${host}/chat/completions`
 
-  const prompt = `Look at this Pokemon trading card image. Find the small text at the bottom-left corner that shows the set code and card number.
+  const prompt = `This is a cropped photo of the bottom-left corner of a Pokemon trading card. Find the small printed set code and card number.
 
 Examples of what to look for:
 - "sv10 042/165" → set code is "sv10", number is "42"
 - "base1 4" → set code is "base1", number is "4"
 - "EX7 14/114" → set code is "ex7", number is "14"
+- "SVP 042" → set code is "svp", number is "42"
 
 Reply with ONLY a JSON object like this (no other text):
 {"setCode": "sv10", "number": "42"}

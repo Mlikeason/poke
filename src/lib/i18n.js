@@ -103,7 +103,8 @@ const M = {
   'detail.notFound': 'Card not found.',
 
   'scan.title': 'Scan Card',
-  'scan.instructions': 'Point camera at the small set code + number at the bottom of your card (e.g. "sv10 042/165").',
+  'scan.instructions': 'Point the yellow box at the bottom-left corner of your card (where the small set code + number is, e.g. "sv10 042/165").',
+  'scan.alignHint': 'Align card code here ↙',
   'scan.start': 'Start camera',
   'scan.capture': 'Capture',
   'scan.retry': 'Try again',
