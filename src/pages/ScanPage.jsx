@@ -96,6 +96,8 @@ export default function ScanPage() {
       for (const track of streamRef.current.getTracks()) track.stop()
       streamRef.current = null
     }
+    zoomRef.current = 1
+    videoRef.current?.classList.remove('scan-zoom-2x')
   }
 
   // Crop guide box region from live video, respecting object-cover transform + zoom
@@ -130,8 +132,9 @@ export default function ScanPage() {
     const rawY0 = (boxTop + offsetY) / scale + (vh - effectiveVH) / 2
     const cropX = Math.max(0, Math.floor(rawX0))
     const cropY = Math.max(0, Math.floor(rawY0))
-    const cropW = Math.min(vw - cropX, Math.floor(boxW / scale))
-    const cropH = Math.min(vh - cropY, Math.floor(boxH / scale))
+    // Crop size must also divide by zoom (display box spans 1/zoom the pixels in effective video)
+    const cropW = Math.min(vw - cropX, Math.floor(boxW / (scale * zoom)))
+    const cropH = Math.min(vh - cropY, Math.floor(boxH / (scale * zoom)))
 
     if (cropW <= 0 || cropH <= 0) return false
 
@@ -395,6 +398,15 @@ export default function ScanPage() {
               )}
             </div>
           )}
+          {/* Capture button — bottom-right inside camera viewport */}
+          {isLive && (
+            <button
+              onClick={capture}
+              className="absolute bottom-3 right-3 z-10 rounded-full bg-white/95 px-4 py-2.5 text-sm font-medium text-slate-800 shadow-lg ring-1 ring-black/10 backdrop-blur transition active:scale-95"
+            >
+              📷 {t('scan.capture')}
+            </button>
+          )}
         </div>
       </div>
 
@@ -408,14 +420,6 @@ export default function ScanPage() {
             style={{ background: POKE_RED }}
           >
             {stage === 'idle' && !ocrReady ? t('scan.processing') : t('scan.start')}
-          </button>
-        )}
-        {isLive && (
-          <button
-            onClick={capture}
-            className="rounded-full bg-white px-4 py-3 text-sm font-medium text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50"
-          >
-            {hasAi ? t('scan.capture') : t('scan.capture')}
           </button>
         )}
         {(showResults || capturedDataUrl) && (
