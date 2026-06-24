@@ -1,7 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
-  <rect width="180" height="180" fill="#EE1515"/>
-  <circle cx="90" cy="90" r="56" fill="none" stroke="white" stroke-width="9"/>
-  <path d="M34 90h112" stroke="white" stroke-width="9" stroke-linecap="round"/>
-  <circle cx="90" cy="90" r="17" fill="white"/>
-  <circle cx="90" cy="90" r="9" fill="#EE1515"/>
+  <defs>
+    <clipPath id="c"><circle cx="90" cy="90" r="80"/></clipPath>
+  </defs>
+  <!-- Red top half -->
+  <circle cx="90" cy="90" r="80" fill="#EE1515"/>
+  <!-- White bottom half -->
+  <rect x="10" y="90" width="160" height="80" fill="white" clip-path="url(#c)"/>
+  <!-- Black outer ring -->
+  <circle cx="90" cy="90" r="80" fill="none" stroke="#141414" stroke-width="8"/>
+  <!-- Black horizontal band -->
+  <rect x="10" y="83" width="160" height="14" fill="#141414" clip-path="url(#c)"/>
+  <!-- Center button: black outer -->
+  <circle cx="90" cy="90" r="28" fill="#141414"/>
+  <!-- White inner -->
+  <circle cx="90" cy="90" r="19" fill="white"/>
+  <!-- Black dot -->
+  <circle cx="90" cy="90" r="8" fill="#141414"/>
 </svg>
