@@ -15,8 +15,10 @@ const BOX_HEIGHT_PCT = 0.08
 
 // Scan interval (ms) — ~2 FPS for OCR
 const SCAN_INTERVAL_MS = 500
-// Consecutive frames with same code before we trust it
-const CONFIRM_FRAMES = 2
+// Consecutive frames with same code before we trust it (1 = instant jump)
+const CONFIRM_FRAMES = 1
+// Digital zoom for scanning (2x makes small card codes easier to OCR)
+const VIDEO_ZOOM = 2
 
 export default function ScanPage() {
   const t = useT()
@@ -30,6 +32,8 @@ export default function ScanPage() {
   const scanTimerRef = useRef(null)
   const candidateRef = useRef(null)
   const scanningRef = useRef(false)
+  // Current digital zoom factor (1 = no zoom, 2 = 2x). Updated in startCamera.
+  const zoomRef = useRef(1)
 
   const [stage, setStage] = useState('idle') // idle | loading | live | captured | processing | results
   const [capturedDataUrl, setCapturedDataUrl] = useState(null)
@@ -94,7 +98,7 @@ export default function ScanPage() {
     }
   }
 
-  // Crop guide box region from live video, respecting object-cover transform
+  // Crop guide box region from live video, respecting object-cover transform + zoom
   function cropBoxToCanvas() {
     const video = videoRef.current
     const canvas = canvasRef.current
@@ -105,10 +109,14 @@ export default function ScanPage() {
     const vh = video.videoHeight
     const cw = container.clientWidth
     const ch = container.clientHeight
+    const zoom = zoomRef.current || 1
 
-    const scale = Math.max(cw / vw, ch / vh)
-    const displayedW = vw * scale
-    const displayedH = vh * scale
+    // With CSS scale(zoom), the visible video area is (vw/zoom × vh/zoom) centered in the raw frame
+    const effectiveVW = vw / zoom
+    const effectiveVH = vh / zoom
+    const scale = Math.max(cw / effectiveVW, ch / effectiveVH)
+    const displayedW = effectiveVW * scale
+    const displayedH = effectiveVH * scale
     const offsetX = (displayedW - cw) / 2
     const offsetY = (displayedH - ch) / 2
 
@@ -117,8 +125,11 @@ export default function ScanPage() {
     const boxW = cw * BOX_WIDTH_PCT
     const boxH = ch * BOX_HEIGHT_PCT
 
-    const cropX = Math.max(0, Math.floor((boxLeft + offsetX) / scale))
-    const cropY = Math.max(0, Math.floor((boxTop + offsetY) / scale))
+    // Map display coords → effective video coords → raw video coords
+    const rawX0 = (boxLeft + offsetX) / scale + (vw - effectiveVW) / 2
+    const rawY0 = (boxTop + offsetY) / scale + (vh - effectiveVH) / 2
+    const cropX = Math.max(0, Math.floor(rawX0))
+    const cropY = Math.max(0, Math.floor(rawY0))
     const cropW = Math.min(vw - cropX, Math.floor(boxW / scale))
     const cropH = Math.min(vh - cropY, Math.floor(boxH / scale))
 
@@ -187,20 +198,52 @@ export default function ScanPage() {
     setMatches([])
     setRawText('')
     setCapturedDataUrl(null)
+    // Reset zoom before starting new stream
+    zoomRef.current = 1
     try {
+      // Request high resolution so digital zoom has enough pixels
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1080 }, height: { ideal: 1920 } },
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 3840 },
+          height: { ideal: 2160 },
+        },
         audio: false,
       })
       streamRef.current = stream
       if (videoRef.current) {
         videoRef.current.srcObject = stream
         await videoRef.current.play()
+        await applyZoom(VIDEO_ZOOM)
       }
       setStage('live')
     } catch (e) {
       console.error('camera error', e)
       setErr(e.name === 'NotAllowedError' ? t('scan.denied') : t('scan.noCamera'))
+    }
+  }
+
+  // Apply 2x zoom: native camera zoom if supported, otherwise CSS digital zoom
+  async function applyZoom(targetZoom) {
+    const track = streamRef.current?.getVideoTracks()[0]
+    if (!track) return
+    try {
+      const caps = track.getCapabilities?.() || {}
+      if (caps.zoom && caps.zoom.max >= targetZoom) {
+        await track.applyConstraints({ advanced: [{ zoom: targetZoom }] })
+        zoomRef.current = targetZoom
+        videoRef.current?.classList.remove('scan-zoom-2x')
+        console.log(`Native zoom ${targetZoom}x applied`)
+        return
+      }
+    } catch (e) {
+      console.warn('Native zoom failed, falling back to CSS zoom', e)
+    }
+    // CSS digital zoom fallback
+    if (videoRef.current) {
+      videoRef.current.classList.add('scan-zoom-2x')
+      zoomRef.current = targetZoom
+      console.log(`CSS zoom ${targetZoom}x applied`)
     }
   }
 
