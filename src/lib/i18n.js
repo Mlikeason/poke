@@ -151,8 +151,9 @@ const M = {
   'settings.aiTestFail': 'Connection failed: {msg}',
   'settings.aiTesting': 'Testing…',
   'settings.aiTest': 'Test connection',
-  'scan.aiLabel': 'Using AI vision',
-  'scan.ocrLabel': 'Using local OCR',
+  'scan.scanning': 'Watching for card code…',
+  'scan.liveHint': 'Hold steady when detected',
+  'scan.manualMode': 'Tap capture to identify',
 }
 
 export function useT() {

@@ -13,6 +13,11 @@ const BOX_BOTTOM_PCT = 0.03
 const BOX_WIDTH_PCT = 0.28
 const BOX_HEIGHT_PCT = 0.08
 
+// Scan interval (ms) — ~2 FPS for OCR
+const SCAN_INTERVAL_MS = 500
+// Consecutive frames with same code before we trust it
+const CONFIRM_FRAMES = 2
+
 export default function ScanPage() {
   const t = useT()
   const navigate = useNavigate()
@@ -21,17 +26,167 @@ export default function ScanPage() {
   const canvasRef = useRef(null)
   const containerRef = useRef(null)
   const streamRef = useRef(null)
-  const [stage, setStage] = useState('idle') // idle | live | captured | scanning | results
+  const workerRef = useRef(null)
+  const scanTimerRef = useRef(null)
+  const candidateRef = useRef(null)
+  const scanningRef = useRef(false)
+
+  const [stage, setStage] = useState('idle') // idle | loading | live | captured | processing | results
   const [capturedDataUrl, setCapturedDataUrl] = useState(null)
   const [rawText, setRawText] = useState('')
   const [matches, setMatches] = useState([])
   const [err, setErr] = useState(null)
-  const [useAi, setUseAi] = useState(!!getAiKey())
+  const [liveCode, setLiveCode] = useState('')
+  const [useAi, setUseAi] = useState(false)
+  const [ocrReady, setOcrReady] = useState(false)
 
-  useEffect(() => () => stopStream(), [])
+  const hasAi = !!getAiKey()
+
+  // Init Tesseract worker once
+  useEffect(() => {
+    let worker = null
+    let cancelled = false
+    import('tesseract.js').then(async (Tesseract) => {
+      if (cancelled) return
+      worker = await Tesseract.createWorker('eng')
+      if (cancelled) {
+        await worker.terminate()
+        return
+      }
+      workerRef.current = worker
+      setOcrReady(true)
+    }).catch((e) => {
+      console.error('Tesseract init failed', e)
+    })
+    return () => {
+      cancelled = true
+      if (worker) worker.terminate().catch(() => {})
+      workerRef.current = null
+      if (scanTimerRef.current) {
+        clearInterval(scanTimerRef.current)
+        scanTimerRef.current = null
+      }
+      stopStream()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Auto-scan starts when stage=live + ocr ready
+  useEffect(() => {
+    if (stage !== 'live' || !ocrReady) return
+    startAutoScan()
+    return () => stopAutoScan()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage, ocrReady])
+
+  function stopAutoScan() {
+    if (scanTimerRef.current) {
+      clearInterval(scanTimerRef.current)
+      scanTimerRef.current = null
+    }
+    scanningRef.current = false
+  }
+
+  function stopStream() {
+    if (streamRef.current) {
+      for (const track of streamRef.current.getTracks()) track.stop()
+      streamRef.current = null
+    }
+  }
+
+  // Crop guide box region from live video, respecting object-cover transform
+  function cropBoxToCanvas() {
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    const container = containerRef.current
+    if (!video || !canvas || !container || !video.videoWidth) return false
+
+    const vw = video.videoWidth
+    const vh = video.videoHeight
+    const cw = container.clientWidth
+    const ch = container.clientHeight
+
+    const scale = Math.max(cw / vw, ch / vh)
+    const displayedW = vw * scale
+    const displayedH = vh * scale
+    const offsetX = (displayedW - cw) / 2
+    const offsetY = (displayedH - ch) / 2
+
+    const boxLeft = cw * BOX_LEFT_PCT
+    const boxTop = ch * (1 - BOX_BOTTOM_PCT - BOX_HEIGHT_PCT)
+    const boxW = cw * BOX_WIDTH_PCT
+    const boxH = ch * BOX_HEIGHT_PCT
+
+    const cropX = Math.max(0, Math.floor((boxLeft + offsetX) / scale))
+    const cropY = Math.max(0, Math.floor((boxTop + offsetY) / scale))
+    const cropW = Math.min(vw - cropX, Math.floor(boxW / scale))
+    const cropH = Math.min(vh - cropY, Math.floor(boxH / scale))
+
+    if (cropW <= 0 || cropH <= 0) return false
+
+    canvas.width = cropW
+    canvas.height = cropH
+    const ctx = canvas.getContext('2d')
+    ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
+    return true
+  }
+
+  function startAutoScan() {
+    if (scanningRef.current) return
+    scanningRef.current = true
+    candidateRef.current = null
+    setLiveCode('')
+    setErr(null)
+
+    scanTimerRef.current = setInterval(async () => {
+      if (!scanningRef.current) return
+      if (!workerRef.current || !videoRef.current) return
+
+      const ok = cropBoxToCanvas()
+      if (!ok) return
+
+      try {
+        const { data } = await workerRef.current.recognize(canvasRef.current)
+        if (!scanningRef.current) return
+        const text = data.text || ''
+        const parsed = parseNumberAndTotal(text)
+
+        if (parsed) {
+          const key = `${parsed.number}/${parsed.total}`
+          if (candidateRef.current?.key === key) {
+            candidateRef.current.count += 1
+          } else {
+            candidateRef.current = { key, number: parsed.number, total: parsed.total, count: 1 }
+          }
+          setLiveCode(key)
+
+          if (candidateRef.current.count >= CONFIRM_FRAMES) {
+            const found = findCardsByNumberAndTotal(parsed.number, parsed.total, sets)
+            if (found.length > 0) {
+              stopAutoScan()
+              stopStream()
+              setMatches(found.map(({ card, setId }) => ({ ...card, setId })))
+              setRawText(text)
+              setStage('results')
+              setUseAi(false)
+            }
+          }
+        } else {
+          candidateRef.current = null
+          setLiveCode('')
+        }
+      } catch (e) {
+        console.warn('OCR tick failed', e)
+      }
+    }, SCAN_INTERVAL_MS)
+  }
 
   async function startCamera() {
     setErr(null)
+    setLiveCode('')
+    setMatches([])
+    setRawText('')
+    setCapturedDataUrl(null)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment', width: { ideal: 1080 }, height: { ideal: 1920 } },
@@ -49,60 +204,20 @@ export default function ScanPage() {
     }
   }
 
-  function stopStream() {
-    if (streamRef.current) {
-      for (const track of streamRef.current.getTracks()) track.stop()
-      streamRef.current = null
-    }
-  }
-
+  // Manual capture: snapshot + AI (if key) or OCR on snapshot
   async function capture() {
-    const video = videoRef.current
-    const canvas = canvasRef.current
-    const container = containerRef.current
-    if (!video || !canvas || !container) return
-
-    // Map guide box from display coordinates to raw video coordinates.
-    // The video uses object-cover, so the browser may crop parts of the video frame.
-    const vw = video.videoWidth
-    const vh = video.videoHeight
-    const cw = container.clientWidth
-    const ch = container.clientHeight
-
-    // object-cover math
-    const scale = Math.max(cw / vw, ch / vh)
-    const displayedW = vw * scale
-    const displayedH = vh * scale
-    const offsetX = (displayedW - cw) / 2
-    const offsetY = (displayedH - ch) / 2
-
-    // Guide box in display coordinates
-    const boxLeft = cw * BOX_LEFT_PCT
-    const boxTop = ch * (1 - BOX_BOTTOM_PCT - BOX_HEIGHT_PCT)
-    const boxW = cw * BOX_WIDTH_PCT
-    const boxH = ch * BOX_HEIGHT_PCT
-
-    // Convert to video coordinates
-    const cropX = Math.max(0, Math.floor((boxLeft + offsetX) / scale))
-    const cropY = Math.max(0, Math.floor((boxTop + offsetY) / scale))
-    const cropW = Math.min(vw - cropX, Math.floor(boxW / scale))
-    const cropH = Math.min(vh - cropY, Math.floor(boxH / scale))
-
-    canvas.width = cropW
-    canvas.height = cropH
-    const ctx = canvas.getContext('2d')
-    ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.9)
+    const ok = cropBoxToCanvas()
+    if (!ok) return
+    const dataUrl = canvasRef.current.toDataURL('image/jpeg', 0.9)
     setCapturedDataUrl(dataUrl)
+    stopAutoScan()
     stopStream()
-    setStage('scanning')
+    setStage('processing')
     setMatches([])
     setRawText('')
     setErr(null)
 
-    // Try AI vision first if key is configured
-    const aiKey = getAiKey()
-    if (aiKey) {
+    if (hasAi) {
       setUseAi(true)
       try {
         const result = await recognizeCard(dataUrl)
@@ -111,22 +226,23 @@ export default function ScanPage() {
           const found = findCardsByNumberAndTotal(result.number, result.total, sets)
           setMatches(found.map(({ card, setId }) => ({ ...card, setId })))
         } else {
-          setMatches([])
           if (result.reason) setErr(`AI: ${result.reason}`)
         }
         setStage('results')
         return
       } catch (e) {
         console.error('AI vision failed, falling back to OCR', e)
-        // Fall through to Tesseract
       }
     }
 
-    // Fallback to Tesseract OCR
+    // OCR on snapshot
     setUseAi(false)
     try {
-      const Tesseract = await import('tesseract.js')
-      const { data } = await Tesseract.recognize(dataUrl, 'eng', {})
+      if (!workerRef.current) {
+        const Tesseract = await import('tesseract.js')
+        workerRef.current = await Tesseract.createWorker('eng')
+      }
+      const { data } = await workerRef.current.recognize(dataUrl)
       const text = data.text || ''
       setRawText(text)
       const parsed = parseNumberAndTotal(text)
@@ -134,41 +250,47 @@ export default function ScanPage() {
         const found = findCardsByNumberAndTotal(parsed.number, parsed.total, sets)
         setMatches(found.map(({ card, setId }) => ({ ...card, setId })))
       }
-      setStage('results')
     } catch (e) {
-      console.error('OCR failed', e)
+      console.error('Manual OCR failed', e)
       setErr(e.message || 'OCR failed')
-      setStage('results')
     }
+    setStage('results')
   }
 
-  function retry() {
+  async function retry() {
     setCapturedDataUrl(null)
     setRawText('')
     setMatches([])
     setErr(null)
-    setStage('idle')
+    setLiveCode('')
+    candidateRef.current = null
+    await startCamera()
   }
 
   function goToCard(card) {
     navigate(`/card/${card.id}`)
   }
 
+  const canStartCamera = stage === 'idle' || stage === 'results'
+  const isLive = stage === 'live'
+  const isProcessing = stage === 'processing'
+  const showResults = stage === 'results'
+
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <h1 className="text-2xl font-medium text-slate-900">{t('scan.title')}</h1>
       <p className="text-sm text-slate-600">{t('scan.instructions')}</p>
 
-      {/* Camera viewport — portrait, matching phone camera */}
+      {/* Camera viewport */}
       <div className="overflow-hidden rounded-3xl bg-slate-900 shadow-lg ring-1 ring-slate-200">
         <div ref={containerRef} className="relative mx-auto aspect-[3/4] w-full max-w-sm">
           <video
             ref={videoRef}
             playsInline
             muted
-            className={'absolute inset-0 h-full w-full object-cover ' + (stage === 'live' ? '' : 'hidden')}
+            className={'absolute inset-0 h-full w-full object-cover ' + (isLive ? '' : 'hidden')}
           />
-          {capturedDataUrl && stage !== 'live' && (
+          {capturedDataUrl && !isLive && (
             <img src={capturedDataUrl} alt="captured" className="absolute inset-0 h-full w-full object-contain bg-slate-900" />
           )}
           {stage === 'idle' && !capturedDataUrl && (
@@ -179,7 +301,7 @@ export default function ScanPage() {
               </div>
             </div>
           )}
-          {stage === 'scanning' && (
+          {isProcessing && (
             <div className="absolute inset-0 grid place-items-center bg-black/40">
               <div className="flex flex-col items-center gap-3 text-white">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -190,11 +312,14 @@ export default function ScanPage() {
               </div>
             </div>
           )}
-          {/* Scan overlay — guide box matching the crop region exactly */}
-          {stage === 'live' && (
+          {/* Live guide box + detected code indicator */}
+          {isLive && (
             <div className="pointer-events-none absolute inset-0">
               <div
-                className="absolute rounded border-2 border-amber-400 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]"
+                className={
+                  'absolute rounded border-2 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)] transition-colors duration-200 ' +
+                  (liveCode ? 'border-emerald-400' : 'border-amber-400')
+                }
                 style={{
                   left: `${BOX_LEFT_PCT * 100}%`,
                   bottom: `${BOX_BOTTOM_PCT * 100}%`,
@@ -209,8 +334,22 @@ export default function ScanPage() {
                   bottom: `${(BOX_BOTTOM_PCT + BOX_HEIGHT_PCT) * 100 + 2}%`,
                 }}
               >
-                {t('scan.alignHint')}
+                {liveCode ? `✓ ${liveCode}` : t('scan.alignHint')}
               </div>
+              {!ocrReady && (
+                <div className="absolute inset-x-0 top-4 flex justify-center">
+                  <span className="rounded-full bg-black/60 px-3 py-1 text-[10px] text-white/70">
+                    {t('scan.processing')}
+                  </span>
+                </div>
+              )}
+              {ocrReady && !liveCode && (
+                <div className="absolute inset-x-0 top-4 flex justify-center">
+                  <span className="rounded-full bg-black/60 px-3 py-1 text-[10px] text-white/70">
+                    {t('scan.scanning')}
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -218,25 +357,25 @@ export default function ScanPage() {
 
       {/* Actions */}
       <div className="flex gap-2">
-        {(stage === 'idle' || stage === 'results') && !capturedDataUrl && (
+        {canStartCamera && (
           <button
             onClick={startCamera}
-            className="flex-1 rounded-full px-4 py-3 text-sm font-medium text-white shadow transition hover:brightness-105"
+            disabled={!ocrReady && stage === 'idle'}
+            className="flex-1 rounded-full px-4 py-3 text-sm font-medium text-white shadow transition hover:brightness-105 disabled:opacity-50"
             style={{ background: POKE_RED }}
           >
-            {t('scan.start')}
+            {stage === 'idle' && !ocrReady ? t('scan.processing') : t('scan.start')}
           </button>
         )}
-        {stage === 'live' && (
+        {isLive && (
           <button
             onClick={capture}
-            className="flex-1 rounded-full px-4 py-3 text-sm font-medium text-white shadow transition hover:brightness-105"
-            style={{ background: POKE_RED }}
+            className="rounded-full bg-white px-4 py-3 text-sm font-medium text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50"
           >
-            {t('scan.capture')}
+            {hasAi ? t('scan.capture') : t('scan.capture')}
           </button>
         )}
-        {(stage === 'results' || capturedDataUrl) && (
+        {(showResults || capturedDataUrl) && (
           <button
             onClick={retry}
             className="flex-1 rounded-full bg-white px-4 py-3 text-sm font-medium text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50"
@@ -253,7 +392,7 @@ export default function ScanPage() {
       )}
 
       {/* Results */}
-      {stage === 'results' && (
+      {showResults && (
         <div className="space-y-3">
           {matches.length > 0 && (
             <div>
@@ -323,7 +462,6 @@ function CameraIcon() {
 function parseNumberAndTotal(text) {
   if (!text) return null
   const clean = text.replace(/\s+/g, ' ').trim()
-  // Pattern: "042/165" or "247 / 191" — return both numbers
   const m = clean.match(/(\d{1,3})\s*\/\s*(\d{1,3})/)
   if (m) {
     return {
