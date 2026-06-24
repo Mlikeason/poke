@@ -65,17 +65,21 @@ If you cannot read it clearly, reply:
     temperature: 0.1,
   }
 
+  console.log('AI Vision request to:', url)
+  console.log('API Key prefix:', key.substring(0, 10) + '...')
+
   const res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${key}`,
+      Authorization: `Bearer ${key.trim()}`,
     },
     body: JSON.stringify(body),
   })
 
   if (!res.ok) {
     const errText = await res.text()
+    console.error('API error:', res.status, errText)
     throw new Error(`API ${res.status}: ${errText}`)
   }
 
@@ -105,6 +109,9 @@ export async function testAiConnection() {
   const host = getAiHost()
   const url = `${host}/chat/completions`
 
+  console.log('Testing AI connection to:', url)
+  console.log('API Key prefix:', key.trim().substring(0, 10) + '...')
+
   const body = {
     model: 'qwen3.5-omni-flash',
     messages: [{ role: 'user', content: 'Hi' }],
@@ -115,13 +122,14 @@ export async function testAiConnection() {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${key}`,
+      Authorization: `Bearer ${key.trim()}`,
     },
     body: JSON.stringify(body),
   })
 
   if (!res.ok) {
     const errText = await res.text()
+    console.error('API error:', res.status, errText)
     throw new Error(`API ${res.status}: ${errText}`)
   }
 
