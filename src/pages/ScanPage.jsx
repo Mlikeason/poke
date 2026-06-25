@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useT } from '../lib/i18n.js'
-import { findCardsByNumberAndTotal, fetchCardByNumberAndTotal } from '../lib/api.js'
+import { findCardsByNumberAndTotal, fetchCardByNumberAndTotal, formatCardNumber } from '../lib/api.js'
 import { recognizeCard, getAiKey } from '../lib/visionApi.js'
 import { useSets } from '../hooks.js'
 
@@ -306,7 +306,65 @@ export default function ScanPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <h1 className="text-2xl font-medium text-slate-900">{t('scan.title')}</h1>
-      <p className="text-sm text-slate-600">{t('scan.instructions')}</p>
+
+      {/* Results — show above camera */}
+      {showResults && (
+        <div className="space-y-3">
+          {matches.length > 0 && (
+            <div>
+              <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">
+                {t('scan.results')}
+              </h2>
+              <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200">
+                {matches.map((c) => {
+                  const set = sets?.find((s) => s.id === c.setId)
+                  return (
+                    <li key={c.id}>
+                      <button
+                        onClick={() => goToCard(c)}
+                        className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition hover:bg-slate-50"
+                      >
+                        <div className="grid h-14 w-10 shrink-0 place-items-center overflow-hidden rounded bg-slate-100">
+                          {c.img ? (
+                            <img src={c.img} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <span className="font-mono text-[9px] text-slate-400">#{formatCardNumber(c)}</span>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-medium text-slate-900">{c.name}</div>
+                          <div className="truncate text-[10px] text-slate-400">
+                            #{formatCardNumber(c)} · {set?.name || c.setId}
+                            {c.rarity && ` · ${c.rarity}`}
+                          </div>
+                        </div>
+                        <span className="text-slate-300">→</span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )}
+          {matches.length === 0 && rawText && detectedNumber && detectedTotal && (
+            <div className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-800 ring-1 ring-amber-200">
+              <div className="mb-1 font-medium">Detected: {detectedNumber}/{detectedTotal}</div>
+              <div className="text-xs">{t('scan.noMatchNumber')}</div>
+            </div>
+          )}
+          {matches.length === 0 && rawText && !detectedNumber && (
+            <div className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-800 ring-1 ring-amber-200">
+              {t('scan.noMatch')}
+            </div>
+          )}
+          {rawText && (
+            <details className="rounded-2xl bg-white p-4 text-xs text-slate-500 ring-1 ring-slate-200">
+              <summary className="cursor-pointer font-medium text-slate-600">{t('scan.rawText')}</summary>
+              <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-words">{rawText}</pre>
+            </details>
+          )}
+        </div>
+      )}
 
       {/* Camera viewport */}
       <div className="overflow-hidden rounded-3xl bg-slate-900 shadow-lg ring-1 ring-slate-200">
@@ -416,65 +474,6 @@ export default function ScanPage() {
       {err && (
         <div className="rounded-2xl bg-rose-50 p-4 text-sm text-rose-700 ring-1 ring-rose-200">
           {err}
-        </div>
-      )}
-
-      {/* Results */}
-      {showResults && (
-        <div className="space-y-3">
-          {matches.length > 0 && (
-            <div>
-              <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">
-                {t('scan.results')}
-              </h2>
-              <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200">
-                {matches.map((c) => {
-                  const set = sets?.find((s) => s.id === c.setId)
-                  return (
-                    <li key={c.id}>
-                      <button
-                        onClick={() => goToCard(c)}
-                        className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition hover:bg-slate-50"
-                      >
-                        <div className="grid h-14 w-10 shrink-0 place-items-center overflow-hidden rounded bg-slate-100">
-                          {c.img ? (
-                            <img src={c.img} alt="" className="h-full w-full object-cover" />
-                          ) : (
-                            <span className="font-mono text-[9px] text-slate-400">#{c.number}</span>
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-sm font-medium text-slate-900">{c.name}</div>
-                          <div className="truncate text-[10px] text-slate-400">
-                            #{c.number} · {set?.name || c.setId}
-                            {c.rarity && ` · ${c.rarity}`}
-                          </div>
-                        </div>
-                        <span className="text-slate-300">→</span>
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          )}
-          {matches.length === 0 && rawText && detectedNumber && detectedTotal && (
-            <div className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-800 ring-1 ring-amber-200">
-              <div className="mb-1 font-medium">Detected: {detectedNumber}/{detectedTotal}</div>
-              <div className="text-xs">{t('scan.noMatchNumber')}</div>
-            </div>
-          )}
-          {matches.length === 0 && rawText && !detectedNumber && (
-            <div className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-800 ring-1 ring-amber-200">
-              {t('scan.noMatch')}
-            </div>
-          )}
-          {rawText && (
-            <details className="rounded-2xl bg-white p-4 text-xs text-slate-500 ring-1 ring-slate-200">
-              <summary className="cursor-pointer font-medium text-slate-600">{t('scan.rawText')}</summary>
-              <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-words">{rawText}</pre>
-            </details>
-          )}
         </div>
       )}
 
