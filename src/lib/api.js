@@ -152,12 +152,59 @@ export function findCardsByNumberAndTotal(number, total, sets) {
       const parsed = JSON.parse(localStorage.getItem(key))
       if (!parsed?.cards) continue
       for (const card of parsed.cards) {
+        // Compare both with and without leading zeros
         const cardNum = String(parseInt(card.number, 10))
-        if (cardNum === targetNum) {
+        const cardNumRaw = card.number
+        if (cardNum === targetNum || cardNumRaw === number) {
           results.push({ card, setId: set.id })
         }
       }
     } catch {}
+  }
+  return results
+}
+
+// API fallback: fetch card info from pokemontcg.io when localStorage cache misses
+export async function fetchCardByNumberAndTotal(number, total, sets) {
+  const targetTotal = String(parseInt(total, 10))
+  const matchingSets = (sets || []).filter((s) => String(s.total) === targetTotal)
+  if (matchingSets.length === 0) return []
+
+  const results = []
+  for (const set of matchingSets) {
+    try {
+      const url = `https://api.pokemontcg.io/v2/cards?q=set.id:${encodeURIComponent(set.id)} AND number:${encodeURIComponent(number)}&pageSize=10`
+      const res = await fetch(url)
+      if (!res.ok) continue
+      const json = await res.json()
+      if (!json.data) continue
+
+      for (const card of json.data) {
+        const cardNum = String(parseInt(card.number, 10))
+        const cardNumRaw = card.number
+        if (cardNum === String(parseInt(number, 10)) || cardNumRaw === number) {
+          results.push({
+            card: {
+              id: card.id,
+              name: card.name,
+              number: card.number,
+              rarity: card.rarity || '',
+              types: card.types || [],
+              supertype: card.supertype,
+              subtypes: card.subtypes || [],
+              hp: card.hp || null,
+              img: card.images?.small,
+              imgLarge: card.images?.large,
+              price: pickPrice(card),
+              setId: set.id,
+            },
+            setId: set.id,
+          })
+        }
+      }
+    } catch (e) {
+      console.warn('API fallback failed for set', set.id, e)
+    }
   }
   return results
 }

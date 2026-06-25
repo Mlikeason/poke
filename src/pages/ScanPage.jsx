@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useT } from '../lib/i18n.js'
-import { findCardsByNumberAndTotal } from '../lib/api.js'
+import { findCardsByNumberAndTotal, fetchCardByNumberAndTotal } from '../lib/api.js'
 import { recognizeCard, getAiKey } from '../lib/visionApi.js'
 import { useSets } from '../hooks.js'
 
@@ -175,7 +175,12 @@ export default function ScanPage() {
           setLiveCode(key)
 
           if (candidateRef.current.count >= CONFIRM_FRAMES) {
-            const found = findCardsByNumberAndTotal(parsed.number, parsed.total, sets)
+            let found = findCardsByNumberAndTotal(parsed.number, parsed.total, sets)
+            // API fallback when localStorage cache misses
+            if (found.length === 0) {
+              setStage('processing')
+              found = await fetchCardByNumberAndTotal(parsed.number, parsed.total, sets)
+            }
             stopAutoScan()
             stopStream()
             setMatches(found.map(({ card, setId }) => ({ ...card, setId })))
@@ -237,7 +242,11 @@ export default function ScanPage() {
         const result = await recognizeCard(dataUrl)
         setRawText(result.raw || '')
         if (result.number && result.total) {
-          const found = findCardsByNumberAndTotal(result.number, result.total, sets)
+          let found = findCardsByNumberAndTotal(result.number, result.total, sets)
+          // API fallback
+          if (found.length === 0) {
+            found = await fetchCardByNumberAndTotal(result.number, result.total, sets)
+          }
           setMatches(found.map(({ card, setId }) => ({ ...card, setId })))
         } else {
           if (result.reason) setErr(`AI: ${result.reason}`)
@@ -261,7 +270,11 @@ export default function ScanPage() {
       setRawText(text)
       const parsed = parseNumberAndTotal(text)
       if (parsed) {
-        const found = findCardsByNumberAndTotal(parsed.number, parsed.total, sets)
+        let found = findCardsByNumberAndTotal(parsed.number, parsed.total, sets)
+        // API fallback
+        if (found.length === 0) {
+          found = await fetchCardByNumberAndTotal(parsed.number, parsed.total, sets)
+        }
         setMatches(found.map(({ card, setId }) => ({ ...card, setId })))
       }
     } catch (e) {
