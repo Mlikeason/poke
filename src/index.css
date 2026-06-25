@@ -72,9 +72,3 @@ img {
 .anim-star { animation: star-spark 0.4s ease-out; }
 
 .tabular-nums { font-variant-numeric: tabular-nums; }
-
-/* 扫码摄像头 2x 数码变焦（原生 zoom API 不支持时的 fallback） */
-.scan-zoom-2x {
-  transform: scale(2);
-  transform-origin: center center;
-}
