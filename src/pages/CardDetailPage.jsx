@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useSets, useCollection } from '../hooks.js'
-import { findCachedCard } from '../lib/api.js'
+import { findCachedCard, formatCardNumber } from '../lib/api.js'
 import { incOwned, toggleWanted, setCustomPrice } from '../lib/collection.js'
 import { formatPrice, DEFAULT_USD } from '../lib/currency.js'
 import { setCode } from '../lib/setCode.js'
@@ -74,7 +74,7 @@ export default function CardDetailPage() {
           <img src={src} alt={card.name} className="w-full object-contain" />
         ) : (
           <div className="flex aspect-[245/342] w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-slate-50 to-slate-200 p-6 text-center">
-            <span className="font-mono text-5xl font-medium text-slate-500">#{card.number}</span>
+            <span className="font-mono text-5xl font-medium text-slate-500">#{formatCardNumber(card)}</span>
             <span className="text-sm text-slate-600">{card.name}</span>
           </div>
         )}
@@ -84,7 +84,7 @@ export default function CardDetailPage() {
       <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
         <div className="flex items-start justify-between gap-3">
           <h1 className="text-2xl font-medium text-slate-900">{card.name}</h1>
-          <span className="shrink-0 font-mono text-sm text-slate-400">#{card.number}</span>
+          <span className="shrink-0 font-mono text-sm text-slate-400">#{formatCardNumber(card)}</span>
         </div>
 
         {/* Set link */}

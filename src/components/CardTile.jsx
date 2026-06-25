@@ -4,6 +4,7 @@ import { incOwned, toggleWanted, setCustomPrice } from '../lib/collection.js'
 import { useT } from '../lib/i18n.js'
 import { formatPrice, DEFAULT_USD } from '../lib/currency.js'
 import { setCode } from '../lib/setCode.js'
+import { formatCardNumber } from '../lib/api.js'
 
 const PIKACHU_YELLOW = '#FFCC00'
 
@@ -89,7 +90,7 @@ export default function CardTile({ card, entry, customPrice, localImageBase, loc
             <div
               className="flex aspect-[245/342] w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-slate-50 to-slate-200 p-3 text-center"
             >
-              <span className="font-mono text-3xl font-medium text-slate-500">#{card.number}</span>
+              <span className="font-mono text-3xl font-medium text-slate-500">#{formatCardNumber(card)}</span>
               <span className="line-clamp-3 text-xs leading-tight text-slate-600">{card.name}</span>
             </div>
           )}
@@ -147,7 +148,7 @@ export default function CardTile({ card, entry, customPrice, localImageBase, loc
                 </span>
               )}
             </div>
-            <span className="shrink-0 font-mono text-[10px] text-slate-400">#{card.number}</span>
+            <span className="shrink-0 font-mono text-[10px] text-slate-400">#{formatCardNumber(card)}</span>
           </div>
 
           <div className="text-[11px]">

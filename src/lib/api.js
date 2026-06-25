@@ -74,6 +74,7 @@ export async function getCardsForSet(setId, mode) {
       imgLarge: c.images?.large,
       price,
       setId,
+      printedTotal: c.set?.printedTotal || c.set?.total,
     }
   })
 
@@ -201,6 +202,7 @@ export async function fetchCardByNumberAndTotal(number, total, sets) {
               imgLarge: card.images?.large,
               price: pickPrice(card),
               setId: set.id,
+              printedTotal: card.set?.printedTotal || card.set?.total,
             },
             setId: set.id,
           })
@@ -211,4 +213,24 @@ export async function fetchCardByNumberAndTotal(number, total, sets) {
     }
   }
   return results
+}
+
+// Format card number with leading zeros (e.g., "16" -> "016/094")
+export function formatCardNumber(card) {
+  if (!card?.number) return ''
+  const num = card.number
+  const total = card.printedTotal
+
+  // If number already contains slash (e.g., "SV1"), return as-is
+  if (num.includes('/') || num.includes('SV')) return num
+
+  // Pad number with leading zeros based on printedTotal
+  if (total) {
+    const padLen = String(total).length
+    const paddedNum = String(parseInt(num, 10)).padStart(padLen, '0')
+    return `${paddedNum}/${total}`
+  }
+
+  // Fallback: just pad to 3 digits if we don't know total
+  return String(parseInt(num, 10)).padStart(3, '0')
 }

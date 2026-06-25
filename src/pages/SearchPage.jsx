@@ -4,6 +4,7 @@ import { useSets } from '../hooks.js'
 import { searchAll } from '../lib/globalSearch.js'
 import { setCode } from '../lib/setCode.js'
 import { useT } from '../lib/i18n.js'
+import { formatCardNumber } from '../lib/api.js'
 
 const POKE_RED = '#EE1515'
 const PIKACHU_YELLOW = '#FFCC00'
@@ -213,13 +214,13 @@ export default function SearchPage() {
                     {c.img ? (
                       <img src={c.img} alt="" className="h-full w-full object-cover" />
                     ) : (
-                      <span className="font-mono text-[9px] text-slate-400">#{c.number}</span>
+                      <span className="font-mono text-[9px] text-slate-400">#{formatCardNumber(c)}</span>
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-medium text-slate-900">{c.name}</div>
                     <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                      <span>#{c.number}</span>
+                      <span>#{formatCardNumber(c)}</span>
                       {c.rarity && <span>· {c.rarity}</span>}
                     </div>
                   </div>
