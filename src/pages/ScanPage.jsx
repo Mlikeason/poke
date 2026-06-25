@@ -37,6 +37,8 @@ export default function ScanPage() {
   const [matches, setMatches] = useState([])
   const [err, setErr] = useState(null)
   const [liveCode, setLiveCode] = useState('')
+  const [detectedNumber, setDetectedNumber] = useState('')
+  const [detectedTotal, setDetectedTotal] = useState('')
   const [useAi, setUseAi] = useState(false)
   const [ocrReady, setOcrReady] = useState(false)
 
@@ -174,14 +176,14 @@ export default function ScanPage() {
 
           if (candidateRef.current.count >= CONFIRM_FRAMES) {
             const found = findCardsByNumberAndTotal(parsed.number, parsed.total, sets)
-            if (found.length > 0) {
-              stopAutoScan()
-              stopStream()
-              setMatches(found.map(({ card, setId }) => ({ ...card, setId })))
-              setRawText(text)
-              setStage('results')
-              setUseAi(false)
-            }
+            stopAutoScan()
+            stopStream()
+            setMatches(found.map(({ card, setId }) => ({ ...card, setId })))
+            setRawText(text)
+            setDetectedNumber(parsed.number)
+            setDetectedTotal(parsed.total)
+            setStage('results')
+            setUseAi(false)
           }
         } else {
           candidateRef.current = null
@@ -443,7 +445,13 @@ export default function ScanPage() {
               </ul>
             </div>
           )}
-          {matches.length === 0 && rawText && (
+          {matches.length === 0 && rawText && detectedNumber && detectedTotal && (
+            <div className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-800 ring-1 ring-amber-200">
+              <div className="mb-1 font-medium">Detected: {detectedNumber}/{detectedTotal}</div>
+              <div className="text-xs">{t('scan.noMatchNumber')}</div>
+            </div>
+          )}
+          {matches.length === 0 && rawText && !detectedNumber && (
             <div className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-800 ring-1 ring-amber-200">
               {t('scan.noMatch')}
             </div>

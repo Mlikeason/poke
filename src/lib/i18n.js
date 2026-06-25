@@ -111,6 +111,7 @@ const M = {
   'scan.processing': 'Reading card…',
   'scan.results': 'Possible matches',
   'scan.noMatch': 'Could not read card code. Try again in better light, or search manually.',
+  'scan.noMatchNumber': 'No card found with this number. The set may not be cached yet.',
   'scan.rawText': 'What we read:',
   'scan.noCamera': 'Camera not available on this device.',
   'scan.denied': 'Camera permission denied.',
