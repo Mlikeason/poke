@@ -136,13 +136,16 @@ export function findCardsByNumber(number) {
   return results
 }
 
-// 用 number + total 精确匹配: total 是 set 的总卡数, number 是卡在这个 set 里的编号.
-// sets: 来自 useSets() 的 set 列表 (有 total 字段).
+// 用 number + total 精确匹配: total 是 set 的 printedTotal (卡上印的数字), number 是卡在这个 set 里的编号.
+// sets: 来自 useSets() 的 set 列表 (有 total 和 printedTotal 字段).
+// 同时匹配 total 和 printedTotal，因为卡上印的是 printedTotal，但有些 set 两者相同.
 // 返回 [{ card, setId }, ...]
 export function findCardsByNumberAndTotal(number, total, sets) {
   const targetNum = String(parseInt(number, 10))
   const targetTotal = String(parseInt(total, 10))
-  const matchingSets = (sets || []).filter((s) => String(s.total) === targetTotal)
+  const matchingSets = (sets || []).filter(
+    (s) => String(s.printedTotal) === targetTotal || String(s.total) === targetTotal
+  )
   if (matchingSets.length === 0) return []
 
   const results = []
@@ -152,7 +155,6 @@ export function findCardsByNumberAndTotal(number, total, sets) {
       const parsed = JSON.parse(localStorage.getItem(key))
       if (!parsed?.cards) continue
       for (const card of parsed.cards) {
-        // Compare both with and without leading zeros
         const cardNum = String(parseInt(card.number, 10))
         const cardNumRaw = card.number
         if (cardNum === targetNum || cardNumRaw === number) {
@@ -167,7 +169,9 @@ export function findCardsByNumberAndTotal(number, total, sets) {
 // API fallback: fetch card info from pokemontcg.io when localStorage cache misses
 export async function fetchCardByNumberAndTotal(number, total, sets) {
   const targetTotal = String(parseInt(total, 10))
-  const matchingSets = (sets || []).filter((s) => String(s.total) === targetTotal)
+  const matchingSets = (sets || []).filter(
+    (s) => String(s.printedTotal) === targetTotal || String(s.total) === targetTotal
+  )
   if (matchingSets.length === 0) return []
 
   const results = []
